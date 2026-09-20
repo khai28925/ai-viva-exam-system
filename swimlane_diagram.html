@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; }
+
+    .diagram-container {
+      display: flex;
+      flex-direction: row;
+      min-width: 1400px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+    }
+
+    /* Title column on the left */
+    .title-col {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      background: #e8e8e8;
+      border: 1px solid #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 6px;
+      font-weight: bold;
+      font-size: 13px;
+      min-width: 32px;
+      color: #333;
+    }
+
+    /* Lane labels */
+    .lane-label {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      background: #f0f0f0;
+      border: 1px solid #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 4px;
+      font-weight: bold;
+      font-size: 13px;
+      min-width: 32px;
+      color: #333;
+    }
+
+    /* Swim lanes */
+    .lanes-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .lane {
+      display: flex;
+      flex-direction: row;
+      border-bottom: 2px solid #333;
+      min-height: 120px;
+      position: relative;
+    }
+    .lane:last-child {
+      border-bottom: 2px solid #333;
+    }
+    .lane:first-child {
+      border-top: 2px solid #333;
+    }
+
+    .lane-content {
+      flex: 1;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: #fff;
+    }
+
+    /* Activity boxes */
+    .activity {
+      border: 2px solid #555;
+      padding: 10px 16px;
+      text-align: center;
+      min-width: 130px;
+      max-width: 200px;
+      font-size: 12px;
+      line-height: 1.4;
+      position: relative;
+      z-index: 2;
+      color: #333;
+    }
+
+    .activity-lecturer {
+      background: #b3d4fc;
+    }
+
+    .activity-system {
+      background: #fff;
+    }
+
+    /* Start/End rounded */
+    .start-end {
+      border-radius: 20px;
+      background: #b3d4fc;
+      border: 2px solid #555;
+      padding: 8px 20px;
+      font-size: 12px;
+      text-align: center;
+      color: #333;
+    }
+
+    /* SVG overlay for arrows */
+    .arrows-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body style="background: #fff; padding: 20px; overflow-x: auto;">
+
+  <div style="position: relative; min-width: 1500px;">
+    <div class="diagram-container">
+      <!-- Title Column -->
+      <div class="title-col" style="border-right: none;">
+        Tạo phiên thi vấn đáp
+      </div>
+
+      <!-- Lanes -->
+      <div class="lanes-container">
+        <!-- Lane: Giảng viên -->
+        <div class="lane">
+          <div class="lane-label" style="border-left: none;">Giảng viên</div>
+          <div class="lane-content" id="lecturer-lane" style="gap: 30px; flex-wrap: nowrap; padding: 20px 25px;">
+            <div class="start-end" id="start-node">Bắt đầu</div>
+            <div class="activity activity-lecturer" id="a1">Tạo ngân hàng câu hỏi</div>
+            <div class="activity activity-lecturer" id="a2">Thêm câu hỏi vào ngân hàng câu hỏi</div>
+            <div class="activity activity-lecturer" id="a3">Xác định các ý chính mong đợi cho từng câu hỏi</div>
+            <div class="activity activity-lecturer" id="a4">Xác định tiêu chí đánh giá</div>
+            <div style="min-width: 170px;"></div>
+            <div class="activity activity-lecturer" id="a6">Chọn ngân hàng câu hỏi hoặc các câu hỏi sử dụng trong bài thi</div>
+            <div class="activity activity-lecturer" id="a7">Tạo phiên thi vấn đáp</div>
+          </div>
+        </div>
+
+        <!-- Lane: Hệ thống -->
+        <div class="lane">
+          <div class="lane-label" style="border-left: none;">Hệ thống</div>
+          <div class="lane-content" id="system-lane" style="gap: 30px; flex-wrap: nowrap; padding: 20px 25px;">
+            <div style="min-width: 470px;"></div>
+            <div class="activity activity-system" id="a5">Kiểm tra và lưu thông tin câu hỏi</div>
+            <div style="min-width: 80px;"></div>
+            <div class="activity activity-system" id="a8">Lưu phiên thi và cho phép sinh viên tham gia khi phiên thi khả dụng</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kết thúc - nằm ngoài swimlane -->
+    <div style="display: flex; justify-content: center; margin-top: 20px;">
+      <div class="start-end" id="end-node">Kết thúc</div>
+    </div>
+
+    <!-- SVG for arrows -->
+    <svg class="arrows-svg" id="arrows" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+
+  <script>
+    function drawArrows() {
+      const svg = document.getElementById('arrows');
+      const container = svg.parentElement;
+      const rect = container.getBoundingClientRect();
+
+      // Set SVG size
+      svg.setAttribute('width', container.scrollWidth);
+      svg.setAttribute('height', container.scrollHeight);
+      svg.style.width = container.scrollWidth + 'px';
+      svg.style.height = container.scrollHeight + 'px';
+
+      // Clear existing paths
+      while (svg.childNodes.length > 1) {
+        svg.removeChild(svg.lastChild);
+      }
+
+      function getPos(id) {
+        const el = document.getElementById(id);
+        const r = el.getBoundingClientRect();
+        const cr = container.getBoundingClientRect();
+        return {
+          left: r.left - cr.left,
+          right: r.right - cr.left,
+          top: r.top - cr.top,
+          bottom: r.bottom - cr.top,
+          cx: (r.left + r.right) / 2 - cr.left,
+          cy: (r.top + r.bottom) / 2 - cr.top,
+          w: r.width,
+          h: r.height
+        };
+      }
+
+      function drawLine(x1, y1, x2, y2) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', '#555');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('marker-end', 'url(#arrowhead)');
+        svg.appendChild(line);
+      }
+
+      function drawPath(d) {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('stroke', '#555');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('marker-end', 'url(#arrowhead)');
+        svg.appendChild(path);
+      }
+
+      // Horizontal arrows in lecturer lane
+      const start = getPos('start-node');
+      const a1 = getPos('a1');
+      const a2 = getPos('a2');
+      const a3 = getPos('a3');
+      const a4 = getPos('a4');
+      const a5 = getPos('a5');
+      const a6 = getPos('a6');
+      const a7 = getPos('a7');
+      const a8 = getPos('a8');
+      const end = getPos('end-node');
+
+      // Start -> a1
+      drawLine(start.right, start.cy, a1.left, a1.cy);
+
+      // a1 -> a2
+      drawLine(a1.right, a1.cy, a2.left, a2.cy);
+
+      // a2 -> a3
+      drawLine(a2.right, a2.cy, a3.left, a3.cy);
+
+      // a3 -> a4
+      drawLine(a3.right, a3.cy, a4.left, a4.cy);
+
+      // a4 -> a5 (down to system lane)
+      drawPath(`M ${a4.right} ${a4.cy} L ${a4.right + 15} ${a4.cy} L ${a4.right + 15} ${a5.cy} L ${a5.left} ${a5.cy}`);
+
+      // a5 -> a6 (up to lecturer lane)
+      drawPath(`M ${a5.right} ${a5.cy} L ${a5.right + 15} ${a5.cy} L ${a5.right + 15} ${a6.cy} L ${a6.left} ${a6.cy}`);
+
+      // a6 -> a7
+      drawLine(a6.right, a6.cy, a7.left, a7.cy);
+
+      // a7 -> a8 (down to system lane)
+      drawPath(`M ${a7.right} ${a7.cy} L ${a7.right + 15} ${a7.cy} L ${a7.right + 15} ${a8.cy} L ${a8.left} ${a8.cy}`);
+
+      // a8 -> End (down, outside the lane)
+      drawPath(`M ${a8.cx} ${a8.bottom} L ${a8.cx} ${a8.bottom + 10} L ${end.cx} ${a8.bottom + 10} L ${end.cx} ${end.top}`);
+    }
+
+    // Draw arrows after layout is stable
+    window.addEventListener('load', () => {
+      setTimeout(drawArrows, 100);
+    });
+    window.addEventListener('resize', drawArrows);
+  </script>
+</body>
+</html>
