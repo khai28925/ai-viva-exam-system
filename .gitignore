@@ -1,0 +1,30 @@
+# Frontend
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+!.env.example
+
+# Backend
+target/
+*.class
+*.jar
+*.war
+.mvn/timing.properties
+
+# IDE / Editor
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local files
+*.local
