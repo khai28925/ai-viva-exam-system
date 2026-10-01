@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <ProjectReference Include="..\AiViva.Application\AiViva.Application.csproj" />
+    <ProjectReference Include="..\AiViva.Infrastructure\AiViva.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
