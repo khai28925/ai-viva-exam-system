@@ -7,11 +7,15 @@ dist/
 !.env.example
 
 # Backend
-target/
-*.class
-*.jar
-*.war
-.mvn/timing.properties
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+TestResults/
+coverage/
 
 # IDE / Editor
 .idea/
