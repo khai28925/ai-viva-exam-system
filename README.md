@@ -1,105 +1,102 @@
 # AI Viva Exam System
 
-AI-powered Viva Exam System for the Entrepreneurship Experience Project.
+Hệ thống thi vấn đáp có hỗ trợ AI cho Entrepreneurship Experience Project.
 
-## Overview
+## Công nghệ
 
-The system supports AI-assisted oral examinations (Viva), including question preparation, adaptive follow-up/probing questions, exam monitoring, and feedback/reporting.
+- **Frontend:** React 19, Vite 8
+- **Backend:** ASP.NET Core 10 Web API
+- **Kiến trúc backend:** Modular monolith, tách Domain/Application/Infrastructure/API
+- **Database dự kiến:** PostgreSQL
+- **Dịch vụ ngoài dự kiến:** Speech-to-Text, LLM, Text-to-Speech
 
-## Planned Technology Stack
-
-- **Frontend:** React
-- **Backend:** Spring Boot
-- **Database:** PostgreSQL
-- **External services:** Speech-to-Text (STT), Large Language Model (LLM), Text-to-Speech (TTS)
-- **Backend architecture:** Modular Monolith
-
-## Repository Structure
+## Cấu trúc repository
 
 ```text
 .
 ├── backend/
+│   ├── src/
+│   │   ├── AiViva.Api/
+│   │   ├── AiViva.Application/
+│   │   ├── AiViva.Domain/
+│   │   └── AiViva.Infrastructure/
+│   └── AiVivaExamSystem.sln
 ├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   └── styles/
+│   └── package.json
 └── docs/
     └── diagram/
 ```
 
-## Branching Strategy
+## Yêu cầu môi trường
 
-```text
-feature/* ──┐
-docs/*    ──┼── Pull Request ──> develop ── Pull Request ──> main
-fix/*     ──┘
-```
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0): `10.0.401`
+  (cho phép bản patch mới hơn trong cùng feature band qua `global.json`).
+- Node.js `22.19.0`, đồng bộ bằng `.nvmrc` và `.node-version` ở thư mục gốc.
 
-- `main` — stable/submission-ready versions only. Do not push directly.
-- `develop` — integration branch. Do not push task changes directly.
-- `feature/*` — implementation of application features.
-- `docs/*` — documentation and diagrams.
-- `fix/*` — bug fixes.
+## Chạy dự án
 
-Create every task branch from the latest `develop`. Open a Pull Request back into `develop` when the task is complete. Merge `develop` into `main` only through a Pull Request when a stable milestone/release is ready.
+Mở hai terminal tại thư mục gốc.
 
-### Start a task
+Backend:
 
 ```bash
-git checkout develop
-git pull origin develop
-git checkout -b docs/<task-name>
-# or: feature/<task-name>
-# or: fix/<task-name>
+cd backend
+dotnet restore AiVivaExamSystem.sln
+dotnet run --project src/AiViva.Api
 ```
 
-### Commit and push
-
-Stage only files belonging to the current task when possible:
+Frontend:
 
 ```bash
-git status
-git add <task-files>
-git commit -m "docs: add <description>"
-git push -u origin <branch-name>
+cd frontend
+npm ci
+npm run dev
 ```
 
-Then open a Pull Request:
+Truy cập `http://localhost:5173`. Vite sẽ proxy `/api` sang backend tại
+`http://localhost:5065`.
 
-```text
-<task-branch> -> develop
-```
+## API mẫu
 
-Before opening the PR, verify that the branch contains only intended changes:
+- `GET /api/health`: kiểm tra trạng thái API.
+- `GET /api/v1/exams`: luồng mẫu Domain → Application → Infrastructure → API.
+- Swagger UI (Development): `http://localhost:5065/swagger`.
+- OpenAPI JSON: `http://localhost:5065/swagger/v1/swagger.json`.
+- `GET /api/v1/exams?limit=0` trả HTTP 400 với lỗi validation; `limit` hợp lệ
+  từ 1 đến 100, mặc định 50.
+
+## Kiểm tra trước khi mở PR
 
 ```bash
-git fetch origin
-git diff --name-only origin/develop..HEAD
+cd backend
+dotnet build AiVivaExamSystem.sln
+dotnet format AiVivaExamSystem.sln --verify-no-changes --no-restore
 ```
 
-### Recommended commit prefixes
-
-- `feat:` new functionality
-- `fix:` bug fix
-- `docs:` documentation/diagram changes
-- `refactor:` code restructuring without behavior change
-- `test:` tests
-- `chore:` repository/tooling maintenance
-
-## Pull Request Rules
-
-- Use one branch/PR per task.
-- Target `develop` for normal work.
-- Require review before merging when branch rules are enabled.
-- Resolve review conversations before merging.
-- Prefer **Squash merge** to keep the integration history clean.
-- Delete the task branch after it is merged.
-- Never force-push `main` or `develop`.
-
-## Milestone 1 Documents
-
-Store diagrams in `docs/diagram/`. For Milestone 1, use `docs/*` branches such as:
-
-```text
-docs/swimlane-diagram
-docs/use-case-diagram
-docs/conceptual-erd
-docs/system-overview
+```bash
+cd frontend
+npm ci
+npm run check
 ```
+
+`npm run check` chạy ESLint, Prettier check, Vitest và production build.
+Format frontend bằng `npm run format`, backend bằng `dotnet format`.
+
+## Hướng phát triển tiếp theo
+
+- Thay `InMemoryExamRepository` bằng EF Core + PostgreSQL.
+- Thêm authentication/authorization và các role Admin, Lecturer, Student.
+- Tách module Question Bank, Viva Session, Assessment và Reporting.
+- Bổ sung unit test, integration test và CI pipeline.
+
+## Quy ước Git
+
+- `main`: phiên bản ổn định.
+- `develop`: nhánh tích hợp.
+- `feature/*`, `fix/*`, `docs/*`: nhánh theo từng task, tạo từ `develop` và mở
+  pull request quay lại `develop`.
+- Prefix commit khuyến nghị: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`,
+  `chore:`.

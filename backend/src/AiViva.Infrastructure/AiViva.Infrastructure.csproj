@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\AiViva.Application\AiViva.Application.csproj" />
+    <ProjectReference Include="..\AiViva.Domain\AiViva.Domain.csproj" />
+  </ItemGroup>
+</Project>
