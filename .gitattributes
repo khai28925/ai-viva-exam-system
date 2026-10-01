@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# Keep diagram images byte-for-byte unchanged.
+*.png binary
