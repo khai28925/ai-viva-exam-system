@@ -1,4 +1,4 @@
-using AiViva.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace AiViva.Application.Questions;
 
@@ -6,26 +6,14 @@ public sealed record QuestionDto(
     Guid Id,
     Guid QuestionBankId,
     string Content,
-    QuestionType Type,
-    string TypeName,
-    DifficultyLevel DifficultyLevel,
-    string DifficultyLevelName,
-    string? Explanation,
-    int Points,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset? UpdatedAt);
+    DateTimeOffset CreatedAt);
 
 public sealed record CreateQuestionRequest(
-    Guid QuestionBankId,
-    string Content,
-    QuestionType Type,
-    DifficultyLevel DifficultyLevel,
-    string? Explanation,
-    int Points = 1);
+    [Required(ErrorMessage = "Content is required.")]
+    [StringLength(2000, MinimumLength = 1, ErrorMessage = "Content must contain 1 to 2000 characters.")]
+    string Content);
 
 public sealed record UpdateQuestionRequest(
-    string? Content,
-    QuestionType? Type,
-    DifficultyLevel? DifficultyLevel,
-    string? Explanation,
-    int? Points);
+    [Required(ErrorMessage = "Content is required.")]
+    [StringLength(2000, MinimumLength = 1, ErrorMessage = "Content must contain 1 to 2000 characters.")]
+    string Content);

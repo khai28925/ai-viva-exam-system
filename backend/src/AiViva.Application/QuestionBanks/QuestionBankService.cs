@@ -3,48 +3,25 @@ using AiViva.Domain.Entities;
 
 namespace AiViva.Application.QuestionBanks;
 
-public sealed class QuestionBankService(IQuestionBankRepository questionBankRepository, IQuestionRepository questionRepository) : IQuestionBankService
+public sealed class QuestionBankService(IQuestionBankRepository questionBankRepository) : IQuestionBankService
 {
-    public async Task<QuestionBankDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
-    {
-        var bank = await questionBankRepository.GetByIdAsync(id, ct);
-        if (bank is null) return null;
-
-        var questions = await questionRepository.GetByQuestionBankIdAsync(id, ct);
-        return ToDto(bank, questions.Count);
-    }
-
     public async Task<IReadOnlyCollection<QuestionBankDto>> GetAllAsync(CancellationToken ct = default)
     {
         var banks = await questionBankRepository.GetAllAsync(ct);
-        var dtos = new List<QuestionBankDto>(banks.Count);
+        return banks.Select(ToDto).ToArray();
+    }
 
-        foreach (var bank in banks)
-        {
-            var questions = await questionRepository.GetByQuestionBankIdAsync(bank.Id, ct);
-            dtos.Add(ToDto(bank, questions.Count));
-        }
-
-        return dtos.AsReadOnly();
+    public async Task<QuestionBankDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        var bank = await questionBankRepository.GetByIdAsync(id, ct);
+        return bank is null ? null : ToDto(bank);
     }
 
     public async Task<QuestionBankDto> CreateAsync(CreateQuestionBankRequest request, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Title))
-            throw new ArgumentException("Title cannot be empty.", nameof(request.Title));
-
-        var bank = new QuestionBank
-        {
-            Id = Guid.NewGuid(),
-            Title = request.Title,
-            Description = request.Description,
-            SubjectId = request.SubjectId,
-            CreatedAt = DateTimeOffset.UtcNow,
-            IsDeleted = false
-        };
-
+        var bank = new QuestionBank(request.Name, request.Description);
         await questionBankRepository.AddAsync(bank, ct);
-        return ToDto(bank, 0);
+        return ToDto(bank);
     }
 
     public async Task<QuestionBankDto?> UpdateAsync(Guid id, UpdateQuestionBankRequest request, CancellationToken ct = default)
@@ -52,31 +29,24 @@ public sealed class QuestionBankService(IQuestionBankRepository questionBankRepo
         var bank = await questionBankRepository.GetByIdAsync(id, ct);
         if (bank is null) return null;
 
-        if (request.Title is not null) bank.Title = request.Title;
-        if (request.Description is not null) bank.Description = request.Description;
-        
-        bank.UpdatedAt = DateTimeOffset.UtcNow;
+        bank.UpdateDetails(request.Name, request.Description);
+        var updated = await questionBankRepository.UpdateAsync(bank, ct);
+        if (!updated) return null;
 
-        await questionBankRepository.UpdateAsync(bank, ct);
-
-        var questions = await questionRepository.GetByQuestionBankIdAsync(id, ct);
-        return ToDto(bank, questions.Count);
+        return ToDto(bank);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
+    public async Task<QuestionBankDeleteResult> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         return await questionBankRepository.DeleteAsync(id, ct);
     }
 
-    private static QuestionBankDto ToDto(QuestionBank bank, int questionCount)
+    private static QuestionBankDto ToDto(QuestionBank bank)
     {
         return new QuestionBankDto(
             bank.Id,
-            bank.Title,
+            bank.Name,
             bank.Description,
-            bank.SubjectId,
-            questionCount,
-            bank.CreatedAt,
-            bank.UpdatedAt);
+            bank.CreatedAt);
     }
 }

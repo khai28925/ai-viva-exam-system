@@ -2,10 +2,9 @@ namespace AiViva.Application.Questions;
 
 public interface IQuestionService
 {
-    Task<QuestionDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<IReadOnlyCollection<QuestionDto>> GetAllAsync(CancellationToken ct = default);
-    Task<IReadOnlyCollection<QuestionDto>> GetByQuestionBankIdAsync(Guid questionBankId, CancellationToken ct = default);
-    Task<QuestionDto> CreateAsync(CreateQuestionRequest request, CancellationToken ct = default);
-    Task<QuestionDto?> UpdateAsync(Guid id, UpdateQuestionRequest request, CancellationToken ct = default);
-    Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyCollection<QuestionDto>?> GetByQuestionBankIdAsync(Guid questionBankId, CancellationToken ct = default);
+    Task<QuestionDto?> GetByIdAsync(Guid questionBankId, Guid questionId, CancellationToken ct = default);
+    Task<QuestionDto?> CreateAsync(Guid questionBankId, CreateQuestionRequest request, CancellationToken ct = default);
+    Task<QuestionDto?> UpdateAsync(Guid questionBankId, Guid questionId, UpdateQuestionRequest request, CancellationToken ct = default);
+    Task<bool> DeleteAsync(Guid questionBankId, Guid questionId, CancellationToken ct = default);
 }

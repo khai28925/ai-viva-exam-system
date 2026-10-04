@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AiViva.Application.Abstractions;
 using AiViva.Application.QuestionBanks;
 using AiViva.Domain.Entities;
 using AiViva.Infrastructure.Persistence;
@@ -10,119 +11,134 @@ namespace AiViva.Tests;
 
 public sealed class QuestionBankServiceTests
 {
-    private static (InMemoryQuestionBankRepository, InMemoryQuestionRepository, QuestionBankService) CreateService()
+    private static (InMemoryQuestionBankRepository, QuestionBankService) CreateService()
     {
-        var bankRepo = new InMemoryQuestionBankRepository();
-        var questionRepo = new InMemoryQuestionRepository();
-        var service = new QuestionBankService(bankRepo, questionRepo);
-        return (bankRepo, questionRepo, service);
+        var repo = new InMemoryQuestionBankRepository();
+        var service = new QuestionBankService(repo);
+        return (repo, service);
     }
 
     [Fact]
-    public async Task GetAllAsync_ReturnsSeedData()
+    public async Task GetAllAsync_WhenEmpty_ReturnsEmptyList()
     {
-        var (_, _, service) = CreateService();
+        var (_, service) = CreateService();
         var result = await service.GetAllAsync();
-        result.Should().HaveCount(2);
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_ExistingId_ReturnsBank()
-    {
-        var (_, _, service) = CreateService();
-        var id = Guid.Parse("a1b2c3d4-0001-0000-0000-000000000001");
-        
-        var result = await service.GetByIdAsync(id);
-        
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(id);
-        result.Title.Should().Be("Software Engineering Basics");
-        result.QuestionCount.Should().Be(2); // Since seed data has 2 questions for bank1
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_NonExistentId_ReturnsNull()
-    {
-        var (_, _, service) = CreateService();
-        var result = await service.GetByIdAsync(Guid.NewGuid());
-        result.Should().BeNull();
+        result.Should().BeEmpty();
     }
 
     [Fact]
     public async Task CreateAsync_ValidRequest_ReturnsNewBank()
     {
-        var (_, _, service) = CreateService();
-        var subjectId = Guid.NewGuid();
-        var request = new CreateQuestionBankRequest("New Bank", "Description", subjectId);
-        
+        var (_, service) = CreateService();
+        var request = new CreateQuestionBankRequest("Software Engineering Basics", "Fundamental SE concepts");
+
         var result = await service.CreateAsync(request);
-        
+
         result.Should().NotBeNull();
         result.Id.Should().NotBeEmpty();
-        result.Title.Should().Be("New Bank");
-        result.Description.Should().Be("Description");
-        result.SubjectId.Should().Be(subjectId);
-        
+        result.Name.Should().Be("Software Engineering Basics");
+        result.Description.Should().Be("Fundamental SE concepts");
+
         var allBanks = await service.GetAllAsync();
-        allBanks.Should().Contain(b => b.Id == result.Id);
+        allBanks.Should().ContainSingle(b => b.Id == result.Id);
     }
 
     [Fact]
-    public async Task CreateAsync_EmptyTitle_ThrowsArgumentException()
+    public async Task CreateAsync_EmptyName_ThrowsArgumentException()
     {
-        var (_, _, service) = CreateService();
-        var request = new CreateQuestionBankRequest("", "Description", Guid.NewGuid());
-        
+        var (_, service) = CreateService();
+        var request = new CreateQuestionBankRequest("", "Description");
+
         var action = async () => await service.CreateAsync(request);
-        
+
         await action.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
-    public async Task UpdateAsync_ExistingId_UpdatesFields()
+    public async Task GetByIdAsync_ExistingId_ReturnsBank()
     {
-        var (_, _, service) = CreateService();
-        var id = Guid.Parse("a1b2c3d4-0001-0000-0000-000000000001");
-        var request = new UpdateQuestionBankRequest("Updated Title", "Updated Description");
-        
-        var result = await service.UpdateAsync(id, request);
-        
+        var (_, service) = CreateService();
+        var created = await service.CreateAsync(new CreateQuestionBankRequest("Algorithms", "Algo concepts"));
+
+        var result = await service.GetByIdAsync(created.Id);
+
         result.Should().NotBeNull();
-        result!.Title.Should().Be("Updated Title");
-        result.Description.Should().Be("Updated Description");
-        result.UpdatedAt.Should().NotBeNull();
+        result!.Id.Should().Be(created.Id);
+        result.Name.Should().Be("Algorithms");
+        result.Description.Should().Be("Algo concepts");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_NonExistentId_ReturnsNull()
+    {
+        var (_, service) = CreateService();
+        var result = await service.GetByIdAsync(Guid.NewGuid());
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ExistingId_UpdatesDetails()
+    {
+        var (_, service) = CreateService();
+        var created = await service.CreateAsync(new CreateQuestionBankRequest("Original Name", "Original Desc"));
+        var updateRequest = new UpdateQuestionBankRequest("Updated Name", "Updated Desc");
+
+        var result = await service.UpdateAsync(created.Id, updateRequest);
+
+        result.Should().NotBeNull();
+        result!.Name.Should().Be("Updated Name");
+        result.Description.Should().Be("Updated Desc");
+
+        var fetched = await service.GetByIdAsync(created.Id);
+        fetched!.Name.Should().Be("Updated Name");
     }
 
     [Fact]
     public async Task UpdateAsync_NonExistentId_ReturnsNull()
     {
-        var (_, _, service) = CreateService();
-        var request = new UpdateQuestionBankRequest("Updated Title", null);
-        
-        var result = await service.UpdateAsync(Guid.NewGuid(), request);
-        
+        var (_, service) = CreateService();
+        var updateRequest = new UpdateQuestionBankRequest("Updated Name", null);
+
+        var result = await service.UpdateAsync(Guid.NewGuid(), updateRequest);
+
         result.Should().BeNull();
     }
 
     [Fact]
-    public async Task DeleteAsync_ExistingId_ReturnsTrue()
+    public async Task DeleteAsync_ExistingIdWithoutQuestions_ReturnsDeleted()
     {
-        var (_, _, service) = CreateService();
-        var id = Guid.Parse("a1b2c3d4-0001-0000-0000-000000000001");
-        
-        var result = await service.DeleteAsync(id);
-        
-        result.Should().BeTrue();
-        
-        var getResult = await service.GetByIdAsync(id);
+        var (_, service) = CreateService();
+        var created = await service.CreateAsync(new CreateQuestionBankRequest("Bank to delete", null));
+
+        var result = await service.DeleteAsync(created.Id);
+
+        result.Should().Be(QuestionBankDeleteResult.Deleted);
+
+        var getResult = await service.GetByIdAsync(created.Id);
         getResult.Should().BeNull();
     }
 
     [Fact]
-    public async Task DeleteAsync_NonExistentId_ReturnsFalse()
+    public async Task DeleteAsync_NonExistentId_ReturnsNotFound()
     {
-        var (_, _, service) = CreateService();
+        var (_, service) = CreateService();
         var result = await service.DeleteAsync(Guid.NewGuid());
-        result.Should().BeFalse();
+        result.Should().Be(QuestionBankDeleteResult.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WithQuestions_ReturnsHasQuestions()
+    {
+        var (repo, service) = CreateService();
+        var created = await service.CreateAsync(new CreateQuestionBankRequest("Bank with questions", null));
+        var question = new Question(created.Id, "Sample question content");
+        await repo.AddQuestionAsync(question);
+
+        var result = await service.DeleteAsync(created.Id);
+
+        result.Should().Be(QuestionBankDeleteResult.HasQuestions);
+
+        var getResult = await service.GetByIdAsync(created.Id);
+        getResult.Should().NotBeNull();
     }
 }
