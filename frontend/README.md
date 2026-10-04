@@ -12,6 +12,11 @@ npm run dev
 Ứng dụng mặc định chạy tại `http://localhost:5173` và proxy request `/api`
 sang backend tại `http://localhost:5065`.
 
+UI demo độc lập cho Issue #11: mở `http://localhost:5173/question-bank-preview.html`.
+Trang này dùng mock data theo `docs/question-bank-mvp-contract.md`; không gọi backend
+và không thay đổi router/API client. Xem `docs/question-bank-ui-ux.md` để biết các
+trạng thái demo, luồng thao tác và cách nối callback với API sau này.
+
 Sao chép `.env.example` thành `.env` khi cần đổi API base URL.
 
 ## Công cụ và quy ước

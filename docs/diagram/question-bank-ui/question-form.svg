@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">AIVES Question Bank — bản thiết kế hộp thoại thêm câu hỏi</title>
+  <desc id="desc">Hộp thoại thêm câu hỏi có nhãn nội dung, gợi ý, bộ đếm ký tự, nút hủy và nút thêm câu hỏi.</desc>
+  <style>
+    text { font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; }
+    .heading { font-family: Manrope, 'Segoe UI', Arial, sans-serif; font-weight: 700; }
+  </style>
+  <rect width="1200" height="760" fill="#f7f8f4" />
+  <rect width="210" height="760" fill="#173a35" />
+  <text x="31" y="62" class="heading" fill="#fff" font-size="24">AIVES<tspan fill="#de8b5b">.</tspan></text>
+  <rect x="13" y="177" width="183" height="45" rx="8" fill="#31564c" />
+  <text x="30" y="205" fill="#fff" font-size="13" font-weight="600">Ngân hàng câu hỏi</text>
+  <rect x="210" width="990" height="62" fill="#fff" />
+  <text x="270" y="37" fill="#294940" font-size="12">Không gian giảng viên  ›  Ngân hàng câu hỏi</text>
+  <text x="270" y="144" fill="#ce7047" font-size="11" font-weight="700" letter-spacing="1.5">QUESTION BANK / QUẢN LÝ NỘI DUNG</text>
+  <text x="270" y="199" class="heading" fill="#18332f" font-size="40">Ngân hàng câu hỏi.</text>
+  <rect x="270" y="258" width="360" height="390" rx="14" fill="#fff" stroke="#e7eae4" />
+  <rect x="650" y="258" width="490" height="390" rx="14" fill="#fff" stroke="#e7eae4" />
+  <rect width="1200" height="760" fill="#0d231d" opacity=".62" />
+  <rect x="332" y="122" width="536" height="516" rx="16" fill="#fff" />
+  <text x="362" y="164" fill="#ce7047" font-size="10" font-weight="700" letter-spacing="1.5">NGÂN HÀNG CÂU HỎI</text>
+  <text x="362" y="203" class="heading" fill="#18332f" font-size="25">Thêm câu hỏi</text>
+  <text x="362" y="229" fill="#82918a" font-size="13">Trong ngân hàng “Kiến trúc phần mềm”</text>
+  <text x="823" y="178" fill="#80928a" font-size="23">×</text>
+  <text x="362" y="282" fill="#24443a" font-size="13" font-weight="700">Nội dung câu hỏi <tspan fill="#c76648">*</tspan></text>
+  <rect x="362" y="301" width="476" height="180" rx="8" fill="#fff" stroke="#86a797" />
+  <text x="377" y="328" fill="#24443a" font-size="13">Một hệ thống cần xử lý lượng truy cập tăng gấp mười lần.</text>
+  <text x="377" y="352" fill="#24443a" font-size="13">Bạn sẽ đánh giá và cải thiện khả năng mở rộng ra sao?</text>
+  <text x="362" y="502" fill="#98a79d" font-size="11">Một câu hỏi rõ ràng sẽ giúp buổi vấn đáp hiệu quả hơn.</text>
+  <text x="799" y="502" fill="#98a79d" font-size="11">111/2000</text>
+  <line x1="362" y1="538" x2="838" y2="538" stroke="#edf0eb" />
+  <rect x="640" y="560" width="84" height="43" rx="8" fill="#fff" stroke="#e0e6df" />
+  <text x="667" y="587" fill="#50675a" font-size="12" font-weight="700">Hủy</text>
+  <rect x="735" y="560" width="103" height="43" rx="8" fill="#c96f48" />
+  <text x="748" y="587" fill="#fff" font-size="12" font-weight="700">Thêm câu hỏi</text>
+  <text x="332" y="694" fill="#dce8dc" font-size="11">UI concept · Issue #11 · Form theo contract: chỉ gửi { content }</text>
+</svg>
