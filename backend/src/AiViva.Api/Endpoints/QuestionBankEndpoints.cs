@@ -1,3 +1,4 @@
+using AiViva.Api.Extensions;
 using AiViva.Application.Abstractions;
 using AiViva.Application.QuestionBanks;
 using AiViva.Application.Questions;
@@ -9,7 +10,8 @@ public static class QuestionBankEndpoints
     public static RouteGroupBuilder MapQuestionBankEndpoints(this RouteGroupBuilder group)
     {
         var banks = group.MapGroup("/v1/question-banks")
-            .WithTags("Question Banks");
+            .WithTags("Question Banks")
+            .RequireAuthorization(AuthPolicies.QuestionBankManage);
 
         // Question Bank Endpoints
         banks.MapGet("/", async (

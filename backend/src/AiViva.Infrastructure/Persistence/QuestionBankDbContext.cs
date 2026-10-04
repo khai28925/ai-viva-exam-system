@@ -9,6 +9,10 @@ public sealed class QuestionBankDbContext(DbContextOptions<QuestionBankDbContext
 
     public DbSet<Question> Questions => Set<Question>();
 
+    public DbSet<Role> Roles => Set<Role>();
+
+    public DbSet<UserAccount> Users => Set<UserAccount>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(QuestionBankDbContext).Assembly);

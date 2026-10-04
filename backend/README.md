@@ -22,6 +22,9 @@ $env:ConnectionStrings__QuestionBank = "Host=localhost;Port=5432;Database=aives;
 dotnet tool restore
 dotnet restore AiVivaExamSystem.sln
 dotnet ef database update --project src/AiViva.Infrastructure --startup-project src/AiViva.Infrastructure
+$env:AIVES_BOOTSTRAP_ADMIN_EMAIL = 'admin@example.local'
+$bootstrapAdminPassword = Read-Host 'Initial admin password (12-128 characters)' -AsSecureString
+$env:AIVES_BOOTSTRAP_ADMIN_PASSWORD = [System.Net.NetworkCredential]::new('', $bootstrapAdminPassword).Password
 dotnet run --project src/AiViva.Api
 ```
 
@@ -31,6 +34,20 @@ trước khi chạy migration hoặc dùng user có quyền tạo database. `dot
 được khóa ở `backend/.config/dotnet-tools.json`; migration đầu tiên nằm trong
 `AiViva.Infrastructure/Persistence/Migrations`. Migration chỉ chạy khi gọi
 `dotnet ef database update`, không tự chạy lúc API khởi động.
+
+Admin đầu tiên được tạo lúc API khởi động nếu có đủ hai biến
+`AIVES_BOOTSTRAP_ADMIN_EMAIL` và `AIVES_BOOTSTRAP_ADMIN_PASSWORD` mà database
+chưa có admin. Nếu đã có admin, khởi động lại **không** reset mật khẩu. Sau khi
+bootstrap thành công, dừng API và xóa mật khẩu khỏi phiên PowerShell:
+
+```powershell
+Remove-Item Env:\AIVES_BOOTSTRAP_ADMIN_PASSWORD
+Remove-Item Env:\AIVES_BOOTSTRAP_ADMIN_EMAIL
+```
+
+Không lưu mật khẩu bootstrap trong file cấu hình, lịch sử lệnh hoặc git. Ở
+production, dùng secret manager, HTTPS và lưu Data Protection keys bền vững/dùng
+chung giữa các instance để auth cookie không mất hiệu lực sau deploy.
 
 Kiểm tra nhanh trên database thật:
 
@@ -63,6 +80,40 @@ Endpoints mẫu:
 - `GET /api/health`
 - `GET /api/v1/exams`
 - CRUD `/api/v1/question-banks` và `/api/v1/question-banks/{bankId}/questions`
+
+## Đăng nhập và phân quyền MVP
+
+Ba vai trò: `ADMIN`, `LECTURER`, `STUDENT`. Không có đăng ký công khai. Admin
+đầu tiên do bootstrap tạo, sau đó chỉ admin được tạo `LECTURER`/`STUDENT` qua
+`POST /api/v1/admin/users`; không tạo admin qua endpoint này. Admin có thể xem
+user bằng `GET /api/v1/admin/users`.
+
+Luồng frontend: gọi `GET /api/v1/auth/csrf` để nhận `{ "token": "..." }`, sau đó
+gọi `POST /api/v1/auth/login` với `{ "email": "...", "password": "..." }`,
+cookie credentials và header `X-CSRF-TOKEN: <token>`. Dùng cookie credentials
+cho `GET /api/v1/auth/me` (trả `{ id, email, role }`),
+`POST /api/v1/auth/logout` và các API còn lại. Mọi request thay đổi dữ liệu
+phải gửi CSRF header. Auth cookie là `HttpOnly`, không đọc bằng JavaScript.
+React/Vite nên cấu hình proxy `/api` tới `http://localhost:5065` để dùng cùng
+origin khi phát triển local.
+
+`ADMIN` và `LECTURER` được quản lý Question Bank/Question; `STUDENT` hiện chỉ
+có luồng đăng nhập, xem chính mình và đăng xuất, chưa có luồng thi. Quyền
+Question Bank chưa giới hạn theo owner/giảng viên tạo bank. Chi tiết request,
+response, lỗi và ma trận quyền xem [auth MVP contract](../docs/auth-mvp-contract.md).
+
+## Kiểm thử đăng nhập và phân quyền với PostgreSQL
+
+Khi Docker Desktop đang chạy, từ `backend/` chạy:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Test-AuthSmoke.ps1
+```
+
+Script tạo PostgreSQL tạm trên cổng riêng, chạy migration và kiểm tra đăng nhập,
+CSRF, ba vai trò, tài khoản trùng và giới hạn thử đăng nhập. Mật khẩu test được
+sinh ngẫu nhiên. API test và container được dọn sau khi chạy; dữ liệu test
+không được giữ lại. Script không dùng database demo đang có.
 
 ## API documentation và validation
 

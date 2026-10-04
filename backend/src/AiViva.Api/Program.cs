@@ -2,6 +2,7 @@ using AiViva.Api.Endpoints;
 using AiViva.Api.Extensions;
 using AiViva.Application;
 using AiViva.Infrastructure;
+using AiViva.Infrastructure.Accounts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,13 +18,15 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApi();
+builder.Services.AddApiAuth(builder.Environment);
 
 var app = builder.Build();
 
@@ -38,10 +41,19 @@ else
 {
     app.UseHttpsRedirection();
 }
+app.UseRouting();
 app.UseCors(FrontendCorsPolicy);
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseApiAntiforgery();
+
+await AdminBootstrapper.SeedAsync(app.Services, app.Configuration);
 
 var api = app.MapGroup("/api");
 api.MapHealthEndpoints();
+api.MapAuthEndpoints();
+api.MapAdminUserEndpoints();
 api.MapExamEndpoints();
 api.MapQuestionBankEndpoints();
 

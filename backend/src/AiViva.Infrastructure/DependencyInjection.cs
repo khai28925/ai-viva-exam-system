@@ -1,5 +1,9 @@
 using AiViva.Application.Abstractions;
+using AiViva.Application.Accounts;
+using AiViva.Domain.Entities;
+using AiViva.Infrastructure.Accounts;
 using AiViva.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +26,8 @@ public static class DependencyInjection
         services.AddScoped<IExamRepository, InMemoryExamRepository>();
         services.AddDbContext<QuestionBankDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IQuestionBankRepository, PostgresQuestionBankRepository>();
+        services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IPasswordHasher<UserAccount>, PasswordHasher<UserAccount>>();
         return services;
     }
 }
