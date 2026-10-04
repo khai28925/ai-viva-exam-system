@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 
 namespace AiViva.Api.Extensions;
 
@@ -9,6 +10,10 @@ public static class ServiceCollectionExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddValidation();
+        services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
         services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
         services.AddProblemDetails(options =>
         {

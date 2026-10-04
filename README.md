@@ -87,6 +87,8 @@ Format frontend bằng `npm run format`, backend bằng `dotnet format`.
 
 ## Hướng phát triển tiếp theo
 
+- [Contract MVP Question Bank CRUD](docs/question-bank-mvp-contract.md): baseline
+  cho API, database, frontend và các sơ đồ của milestone CRUD.
 - Thay `InMemoryExamRepository` bằng EF Core + PostgreSQL.
 - Thêm authentication/authorization và các role Admin, Lecturer, Student.
 - Tách module Question Bank, Viva Session, Assessment và Reporting.

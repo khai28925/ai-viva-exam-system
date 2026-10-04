@@ -43,6 +43,7 @@ app.UseCors(FrontendCorsPolicy);
 var api = app.MapGroup("/api");
 api.MapHealthEndpoints();
 api.MapExamEndpoints();
+api.MapQuestionBankEndpoints();
 
 app.Run();
 
