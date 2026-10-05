@@ -15,8 +15,9 @@ STT hoặc TTS vào phần CRUD đã chạy. Vẫn cần nghiệm thu giao diệ
 khi đóng Issue #8.
 
 Nhánh tích hợp kế thừa đăng nhập/phân quyền từ PR #20. PR #20 và PR sơ đồ tổng
-quan #21 đã merge vào `develop`; nhánh Issue #8 cần đồng bộ các merge này trước
-khi mở PR.
+quan #21 đã merge vào `develop`. Nhánh Issue #8 đã đồng bộ các merge này và
+được mở thành [PR #22](https://github.com/khai28925/ai-viva-exam-system/pull/22)
+để review; chưa merge.
 
 ## Chuẩn bị môi trường
 
@@ -188,12 +189,12 @@ chính sách cookie của browser; vẫn phải thao tác kiểm tra giao diện
 
 Checklist nghiệm thu (chỉ đánh dấu sau khi thực hiện trên revision định merge):
 
-- [ ] FE lint/format/test/build và BE build/test/format đạt.
+- [x] FE lint/format/test/build và BE build/test/format đạt.
 - [ ] Smoke API + PostgreSQL đạt; lưu kết quả trong PR, không lưu secret.
 - [ ] Thử CRUD cả bank và question bằng giao diện `/question-banks`.
 - [ ] Thử tải lại/restart, `409`, lỗi kết nối/retry và quyền Student trên UI.
 - [ ] Chụp UI thật: danh sách, form bank, form question và lỗi xóa bank còn câu hỏi.
-- [ ] Physical ERD/source/dictionary đã review đúng phạm vi trình bày.
+- [x] Physical ERD/source/dictionary đã review đúng phạm vi trình bày.
 - [x] Có Class Diagram source + ảnh SVG, đối chiếu với code hiện tại.
 - [x] PR #20 đã merge; PR tích hợp vẫn cần review/merge vào `develop`.
 
