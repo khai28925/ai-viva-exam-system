@@ -51,11 +51,18 @@ chung giữa các instance để auth cookie không mất hiệu lực sau deplo
 
 Kiểm tra nhanh trên database thật:
 
-1. Mở `http://localhost:5065/swagger` (Development).
-2. Tạo một Question Bank rồi tạo một Question trong bank đó.
+1. Chạy FE, đăng nhập `ADMIN`/`LECTURER` và mở `http://localhost:5173/question-banks`.
+2. Tạo một Question Bank rồi tạo một Question trong bank đó. Swagger ở
+   `http://localhost:5065/swagger` dùng tham khảo contract; request ghi dữ liệu
+   trực tiếp vẫn cần cookie đăng nhập và CSRF header.
 3. Dừng API bằng Ctrl+C, chạy lại và GET cả hai resource: dữ liệu phải còn.
 4. Xóa bank khi còn question phải trả `409`; xóa question trước, sau đó xóa bank
    phải thành công. Endpoint dùng contract trong `docs/question-bank-mvp-contract.md`.
+
+Xem [kịch bản demo Issue #8](../docs/issue-8-demo.md) cho seed dữ liệu qua API,
+script `Test-QuestionBankSmoke.ps1`, kiểm tra UI thật và đối chiếu Physical ERD.
+Smoke Question Bank cũng chạy test React/jsdom với HTTP thật; cần `npm ci`
+ở frontend trước. Test không thay thế kiểm tra trực quan trong trình duyệt.
 
 Để xem SQL mà không cập nhật database:
 

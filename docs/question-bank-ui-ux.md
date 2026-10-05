@@ -10,8 +10,13 @@ họa chỉ có các trường từ [MVP contract](question-bank-mvp-contract.md
 
 UI ở `frontend/src/features/question-bank/QuestionBankWorkspace.jsx` nhận `banks`,
 `questions`, `isLoading`, `error` và callback qua props. Không import API client;
-không sửa router. Trang `/question-bank-preview.html` là host mock để có thể
+không tự điều khiển router. Trang `/question-bank-preview.html` là host mock để có thể
 trình bày độc lập khi BE chưa chạy.
+
+Issue #8 bổ sung container `QuestionBankPage` tại route `/question-banks` để
+gọi API thật, cùng các callback tạo/sửa/xóa ngân hàng và trạng thái phiên đăng
+nhập. Workspace vẫn nhận dữ liệu/callback qua props, không tự import API client;
+mock preview Issue #11 được giữ độc lập. Xem [demo tích hợp](issue-8-demo.md).
 
 ## Luồng giảng viên
 
@@ -56,6 +61,9 @@ chụp thêm ảnh giao diện thực tế từ trang preview để đối chi�
 
 | Prop | Ý nghĩa |
 | --- | --- |
+| `onCreateBank({ name, description })` | `POST /api/v1/question-banks` (Issue #8) |
+| `onUpdateBank(bankId, { name, description })` | `PUT /api/v1/question-banks/{bankId}` (Issue #8) |
+| `onDeleteBank(bankId)` | `DELETE /api/v1/question-banks/{bankId}`; hiển thị lỗi 409 nếu bank còn question (Issue #8) |
 | `onCreateQuestion(bankId, { content })` | `POST /api/v1/question-banks/{bankId}/questions` |
 | `onUpdateQuestion(bankId, questionId, { content })` | `PUT /api/v1/question-banks/{bankId}/questions/{questionId}` |
 | `onDeleteQuestion(bankId, questionId)` | `DELETE /api/v1/question-banks/{bankId}/questions/{questionId}` |

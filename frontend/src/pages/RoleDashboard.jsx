@@ -1,4 +1,5 @@
 import SessionLayout from '../features/auth/SessionLayout.jsx'
+import { Link } from 'react-router'
 
 const content = {
   STUDENT: {
@@ -18,7 +19,7 @@ const content = {
     cards: [
       [
         'Ngân hàng câu hỏi',
-        'Chức năng CRUD và giao diện đang được tích hợp vào ứng dụng.',
+        'Tạo ngân hàng, quản lý câu hỏi và lưu trực tiếp vào PostgreSQL.',
       ],
       ['Phiên thi', 'Lịch thi và phiên vấn đáp sẽ hiển thị tại đây.'],
     ],
@@ -35,6 +36,14 @@ export default function RoleDashboard({ role }) {
             <span>0{index + 1} / MODULE</span>
             <h2>{title}</h2>
             <p>{description}</p>
+            {role === 'LECTURER' && index === 0 && (
+              <Link
+                className="qb-button qb-button--primary"
+                to="/question-banks"
+              >
+                Mở ngân hàng câu hỏi
+              </Link>
+            )}
           </section>
         ))}
       </div>

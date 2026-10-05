@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate } from 'react-router'
+import { Link, Navigate, useLocation } from 'react-router'
 import { useAuth } from './authContext.js'
 import { SessionStatus } from './RequireRole.jsx'
 import { ROLE_HOME } from './roles.js'
@@ -7,6 +7,7 @@ import './auth.css'
 
 export default function LoginPage() {
   const { status, user, login } = useAuth()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [pending, setPending] = useState(false)
@@ -14,7 +15,19 @@ export default function LoginPage() {
 
   if (status === 'loading' || status === 'error') return <SessionStatus />
   if (status === 'authenticated') {
-    return <Navigate to={ROLE_HOME[user.role] ?? '/forbidden'} replace />
+    const returnToQuestionBanks =
+      location.state?.from === '/question-banks' &&
+      ['ADMIN', 'LECTURER'].includes(user.role)
+    return (
+      <Navigate
+        to={
+          returnToQuestionBanks
+            ? '/question-banks'
+            : (ROLE_HOME[user.role] ?? '/forbidden')
+        }
+        replace
+      />
+    )
   }
 
   async function handleSubmit(event) {

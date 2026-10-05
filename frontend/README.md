@@ -19,6 +19,10 @@ chuyển đến không gian `/admin`, `/lecturer` hoặc `/student` theo vai tr�
 `/about` giữ trang giới thiệu công khai. Trang frontend kiểm tra phiên với
 `GET /api/v1/auth/me` khi mở ứng dụng.
 
+Question Bank dùng API thật tại `/question-banks`, dành cho `ADMIN` và
+`LECTURER`. Xem [hướng dẫn tích hợp và demo Issue #8](../docs/issue-8-demo.md)
+để chuẩn bị dữ liệu, chạy CRUD và kiểm tra persistence với PostgreSQL.
+
 Phiên đăng nhập dùng cookie `HttpOnly`, không lưu token vào localStorage.
 HTTP client gửi `credentials: 'include'` và lấy CSRF token mới trước mỗi request
 POST/PUT/DELETE. Route guard chỉ phục vụ điều hướng; backend vẫn kiểm tra quyền
@@ -28,7 +32,7 @@ UI demo độc lập cho Issue #11: mở `http://localhost:5173/question-bank-pr
 Trang này dùng mock data theo `docs/question-bank-mvp-contract.md`; không gọi backend
 và không nằm trong luồng đăng nhập/phân quyền của SPA. Đây chỉ là bản preview
 thiết kế công khai, không chứa dữ liệu thật. Xem `docs/question-bank-ui-ux.md` để biết các
-trạng thái demo, luồng thao tác và cách nối callback với API sau này.
+trạng thái demo và luồng thao tác. Preview được giữ độc lập với trang API thật.
 
 Sao chép `.env.example` thành `.env` khi cần đổi API base URL.
 
@@ -42,6 +46,10 @@ Sao chép `.env.example` thành `.env` khi cần đổi API base URL.
 - Vitest + Testing Library: test đặt cạnh module (`*.test.js`, `*.test.jsx`).
   Chạy `npm test` hoặc `npm run test:watch`.
 - `npm run check`: lint → format check → test → build.
+- `QuestionBankLive.test.jsx` là test opt-in React/jsdom gửi HTTP thật tới
+  PostgreSQL qua API, mặc định skip. Chạy qua
+  `backend/scripts/Test-QuestionBankSmoke.ps1` để harness tạo dữ liệu/tài khoản
+  tạm và dọn sau test; đây không phải test trình duyệt hoặc chụp UI.
 - HTTP client giữ Problem Details trong `ApiError.problem`, bao gồm `errors`
   và `traceId` để form CRUD có thể hiển thị lỗi theo field.
 

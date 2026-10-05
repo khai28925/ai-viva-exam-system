@@ -37,8 +37,9 @@ hữu ngân hàng câu hỏi để giới hạn theo từng giảng viên.
 | | `createdAt: DateTimeOffset` | UTC do server sinh, không cho client sửa. |
 
 Entity và repository interface được định nghĩa ở Domain/Application. Tầng
-Infrastructure có adapter in-memory tạm để phát triển API khi chưa có database;
-adapter này không phải PostgreSQL persistence cuối cùng.
+Infrastructure giữ adapter in-memory ban đầu để tham chiếu/kiểm thử, nhưng
+runtime hiện đăng ký `PostgresQuestionBankRepository` và yêu cầu chuỗi kết nối
+PostgreSQL. Không có fallback in-memory khi database thiếu hoặc lỗi.
 
 ## Physical schema PostgreSQL
 
@@ -102,8 +103,10 @@ Danh sách sắp theo `createdAt` tăng dần, cùng thời điểm thì theo `i
 - Lead: giữ contract này và model/interface baseline.
 - BE database: EF Core, DbContext, migration, adapter PostgreSQL theo schema.
 - BE API: endpoint, application service, validation, backend test theo HTTP API.
-- FE: UI với mock response cùng shape; lead nối API sau.
+- FE: UI Issue #11 giữ preview mock response cùng shape; lead nối API thật ở
+  `/question-banks` trong Issue #8, không thay preview thành nguồn dữ liệu thật.
 - Tài liệu: Physical ERD theo đúng hai bảng của MVP.
 
-Khi PostgreSQL adapter hoàn thành, thay đăng ký in-memory của Question Bank bằng
-adapter PostgreSQL tại `AddInfrastructure()`; không cần đổi HTTP contract.
+PostgreSQL adapter đã được đăng ký tại `AddInfrastructure()` qua Issue #9 mà
+không đổi HTTP contract. Phân quyền và tích hợp FE trên nhánh Issue #8 kế thừa
+PR #20; cần merge dependency đó trước khi đưa phần tích hợp vào `develop`.

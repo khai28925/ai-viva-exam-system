@@ -41,6 +41,9 @@ export default function SessionLayout({
           </span>
         </Link>
         <div className="auth-workspace__identity">
+          {['ADMIN', 'LECTURER'].includes(user.role) && (
+            <Link to="/question-banks">Ngân hàng câu hỏi</Link>
+          )}
           <span className="auth-workspace__role">
             {roleLabels[user.role] ?? user.role}
           </span>

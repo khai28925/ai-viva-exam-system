@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="510" viewBox="0 0 1120 510" role="img" aria-labelledby="title description">
+  <title id="title">Question Bank MVP — PostgreSQL Physical ERD</title>
+  <desc id="description">A question bank has zero or many questions. Each question has exactly one bank. Both tables have UUID primary keys and timestamptz creation dates. Deleting a bank with questions is restricted. The question bank foreign key has an index.</desc>
+  <rect width="1120" height="510" fill="#f6f8f6" />
+  <g font-family="Arial, sans-serif" fill="#173a35">
+    <text x="40" y="45" font-size="24" font-weight="700">Question Bank MVP · Physical ERD</text>
+    <text x="40" y="71" font-size="14">PostgreSQL · aligned with InitialQuestionBank migration · Issue #8 review</text>
+    <rect x="40" y="105" width="430" height="226" rx="8" fill="white" stroke="#173a35" />
+    <rect x="650" y="105" width="430" height="226" rx="8" fill="white" stroke="#173a35" />
+    <path d="M40 151 H470 M650 151 H1080" stroke="#173a35" />
+    <text x="60" y="135" font-size="20" font-weight="700">question_banks</text>
+    <text x="670" y="135" font-size="20" font-weight="700">questions</text>
+    <g font-family="Consolas, monospace" font-size="14">
+      <text x="60" y="184">PK  id            uuid NOT NULL</text>
+      <text x="60" y="223">    name          varchar(120) NOT NULL</text>
+      <text x="60" y="262">    description   varchar(500) NULL</text>
+      <text x="60" y="301">    created_at    timestamptz NOT NULL</text>
+      <text x="670" y="184">PK  id                uuid NOT NULL</text>
+      <text x="670" y="223">FK  question_bank_id  uuid NOT NULL</text>
+      <text x="670" y="262">    content           varchar(2000) NOT NULL</text>
+      <text x="670" y="301">    created_at        timestamptz NOT NULL</text>
+    </g>
+    <path d="M470 178 H550 V217 H650 M480 169 V187 M487 169 V187 M638 217 L650 207 M638 217 L650 227" fill="none" stroke="#173a35" stroke-width="2" />
+    <circle cx="627" cy="217" r="5" fill="#f6f8f6" stroke="#173a35" stroke-width="2" />
+    <text x="494" y="164" font-size="15" font-weight="700">1</text>
+    <text x="598" y="198" font-size="15" font-weight="700">0..*</text>
+    <text x="40" y="374" font-size="15">FK: questions.question_bank_id → question_banks.id · ON DELETE RESTRICT</text>
+    <text x="40" y="402" font-size="15">Index: ix_questions_question_bank_id (question_bank_id) · bank names are not unique</text>
+    <text x="40" y="430" font-size="15">UUIDs and UTC created_at values are assigned by the application, not database defaults.</text>
+    <text x="40" y="478" font-size="13" fill="#516b66">Scope: the two-table CRUD slice. Auth users/roles are separate; no bank owner relationship exists in this MVP.</text>
+  </g>
+</svg>

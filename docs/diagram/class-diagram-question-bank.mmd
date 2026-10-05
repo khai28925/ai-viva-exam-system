@@ -1,0 +1,102 @@
+classDiagram
+    direction LR
+
+    class QuestionBank {
+        <<entity>>
+        +Guid Id
+        +string Name
+        +string? Description
+        +DateTimeOffset CreatedAt
+        +UpdateDetails(name, description) void
+    }
+
+    class Question {
+        <<entity>>
+        +Guid Id
+        +Guid QuestionBankId
+        +string Content
+        +DateTimeOffset CreatedAt
+        +UpdateContent(content) void
+    }
+
+    class IQuestionBankService {
+        <<interface>>
+        +GetAllAsync()
+        +GetByIdAsync(id)
+        +CreateAsync(request)
+        +UpdateAsync(id, request)
+        +DeleteAsync(id)
+    }
+
+    class QuestionBankService {
+        <<service>>
+        +GetAllAsync()
+        +GetByIdAsync(id)
+        +CreateAsync(request)
+        +UpdateAsync(id, request)
+        +DeleteAsync(id)
+    }
+
+    class IQuestionService {
+        <<interface>>
+        +GetByQuestionBankIdAsync(bankId)
+        +GetByIdAsync(bankId, questionId)
+        +CreateAsync(bankId, request)
+        +UpdateAsync(bankId, questionId, request)
+        +DeleteAsync(bankId, questionId)
+    }
+
+    class QuestionService {
+        <<service>>
+        +GetByQuestionBankIdAsync(bankId)
+        +GetByIdAsync(bankId, questionId)
+        +CreateAsync(bankId, request)
+        +UpdateAsync(bankId, questionId, request)
+        +DeleteAsync(bankId, questionId)
+    }
+
+    class IQuestionBankRepository {
+        <<interface>>
+        +GetAllAsync()
+        +GetByIdAsync(id)
+        +AddAsync(bank)
+        +UpdateAsync(bank)
+        +DeleteAsync(id)
+        +GetQuestionsAsync(bankId)
+        +GetQuestionByIdAsync(bankId, questionId)
+        +AddQuestionAsync(question)
+        +UpdateQuestionAsync(question)
+        +DeleteQuestionAsync(bankId, questionId)
+    }
+
+    class PostgresQuestionBankRepository {
+        <<repository>>
+        -QuestionBankDbContext db
+        +GetAllAsync()
+        +GetQuestionsAsync(bankId)
+        +AddQuestionAsync(question)
+        +DeleteQuestionAsync(bankId, questionId)
+    }
+
+    class QuestionBankDbContext {
+        <<DbContext>>
+        +QuestionBanks DbSet
+        +Questions DbSet
+        +Roles DbSet
+        +Users DbSet
+    }
+
+    class QuestionBankEndpoints {
+        <<static>>
+        +MapQuestionBankEndpoints(group) RouteGroupBuilder
+    }
+
+    QuestionBank "1" <-- "0..*" Question : QuestionBankId FK
+    QuestionBankService ..|> IQuestionBankService
+    QuestionService ..|> IQuestionService
+    QuestionBankService --> IQuestionBankRepository : uses
+    QuestionService --> IQuestionBankRepository : uses
+    PostgresQuestionBankRepository ..|> IQuestionBankRepository
+    PostgresQuestionBankRepository --> QuestionBankDbContext : uses
+    QuestionBankEndpoints ..> IQuestionBankService : calls
+    QuestionBankEndpoints ..> IQuestionService : calls
