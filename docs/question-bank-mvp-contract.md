@@ -9,10 +9,19 @@ cập nhật các nhánh triển khai.
 
 - Giảng viên quản lý ngân hàng câu hỏi (`QuestionBank`) và câu hỏi (`Question`).
 - Một ngân hàng có nhiều câu hỏi; mỗi câu hỏi thuộc đúng một ngân hàng.
-- Chưa làm đăng nhập/phân quyền, phiên thi vấn đáp, expected key points, rubric,
+- Đăng nhập/phân quyền được bổ sung theo [auth MVP contract](auth-mvp-contract.md).
+- Chưa làm phiên thi vấn đáp, expected key points, rubric,
   AI, Speech-to-Text hoặc Text-to-Speech trong lát cắt CRUD này.
 - Endpoint `GET /api/v1/exams` hiện có là ví dụ của skeleton, không phải dữ liệu
   hay API của Question Bank.
+
+## Quyền truy cập
+
+Các endpoint Question Bank/Question yêu cầu đăng nhập với vai trò `LECTURER`
+hoặc `ADMIN`. Chưa đăng nhập trả `401`; tài khoản `STUDENT` trả `403`. Request
+`POST`, `PUT`, `DELETE` cần cookie đăng nhập và header `X-CSRF-TOKEN` lấy từ
+`GET /api/v1/auth/csrf`. Hiện phân quyền theo vai trò; schema chưa có người sở
+hữu ngân hàng câu hỏi để giới hạn theo từng giảng viên.
 
 ## Domain và dữ liệu
 
