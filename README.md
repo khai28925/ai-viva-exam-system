@@ -7,7 +7,7 @@ Hệ thống thi vấn đáp có hỗ trợ AI cho Entrepreneurship Experience P
 - **Frontend:** React 19, Vite 8
 - **Backend:** ASP.NET Core 10 Web API
 - **Kiến trúc backend:** Modular monolith, tách Domain/Application/Infrastructure/API
-- **Database dự kiến:** PostgreSQL
+- **Database:** PostgreSQL (Question Bank và tài khoản trên nhánh tích hợp)
 - **Dịch vụ ngoài dự kiến:** Speech-to-Text, LLM, Text-to-Speech
 
 ## Cấu trúc repository
@@ -37,6 +37,12 @@ Hệ thống thi vấn đáp có hỗ trợ AI cho Entrepreneurship Experience P
 - Node.js `22.19.0`, đồng bộ bằng `.nvmrc` và `.node-version` ở thư mục gốc.
 
 ## Chạy dự án
+
+Question Bank hiện dùng PostgreSQL và yêu cầu đăng nhập. Trước lần chạy đầu,
+thực hiện [setup database, migration và admin](backend/README.md); các lệnh
+`dotnet run` dưới đây giả định terminal đã có chuỗi kết nối đúng.
+Xem [hướng dẫn demo CRUD FE → BE → PostgreSQL](docs/issue-8-demo.md) để chuẩn bị
+dữ liệu và mở `/question-banks` bằng tài khoản `ADMIN`/`LECTURER`.
 
 Mở hai terminal tại thư mục gốc.
 
@@ -89,10 +95,16 @@ Format frontend bằng `npm run format`, backend bằng `dotnet format`.
 
 - [Contract MVP Question Bank CRUD](docs/question-bank-mvp-contract.md): baseline
   cho API, database, frontend và các sơ đồ của milestone CRUD.
-- Thay `InMemoryExamRepository` bằng EF Core + PostgreSQL.
-- Thêm authentication/authorization và các role Admin, Lecturer, Student.
+- [Demo và checklist Issue #8](docs/issue-8-demo.md),
+  [Class Diagram](docs/diagram/class-diagram-question-bank.svg),
+  [Physical ERD + data dictionary đã đối chiếu](docs/diagram/question-bank/README.md).
+- Question Bank đã dùng EF Core + PostgreSQL. `InMemoryExamRepository` chỉ còn
+  phục vụ endpoint Exam mẫu; thay nó khi triển khai nghiệp vụ phiên thi thật.
+- Đăng nhập/phân quyền Admin, Lecturer, Student đã được merge vào `develop`
+  qua [PR #20](https://github.com/khai28925/ai-viva-exam-system/pull/20).
+- Cùng nhóm nghiệm thu giao diện và luồng demo Issue #8 trước khi merge.
 - Tách module Question Bank, Viva Session, Assessment và Reporting.
-- Bổ sung unit test, integration test và CI pipeline.
+- Mở rộng test cho các module mới và bổ sung CI pipeline.
 
 ## Quy ước Git
 

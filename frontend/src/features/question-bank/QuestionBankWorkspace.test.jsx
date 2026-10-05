@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import QuestionBankWorkspace from './QuestionBankWorkspace.jsx'
@@ -19,7 +19,7 @@ function renderWorkspace(overrides = {}) {
       {...overrides}
     />,
   )
-  return callbacks
+  return { ...callbacks, ...overrides }
 }
 
 describe('QuestionBankWorkspace', () => {
@@ -155,4 +155,262 @@ describe('QuestionBankWorkspace', () => {
       .click(screen.getByRole('button', { name: 'Thử lại' }))
     expect(onRetry).toHaveBeenCalledOnce()
   })
+
+  it('preserves the standalone mock preview when bank callbacks are omitted', () => {
+    renderWorkspace()
+    expect(screen.getByText('Dữ liệu minh họa')).toBeInTheDocument()
+    expect(screen.getByText('Bản xem trước UI')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Thêm ngân hàng' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Sửa ngân hàng' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Đăng xuất' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('renders signed-in account context and logout controls', async () => {
+    const onLogout = vi.fn()
+    renderWorkspace({
+      dataSourceLabel: 'Dữ liệu PostgreSQL',
+      accountLabel: 'Admin',
+      accountDetail: 'admin@example.com',
+      navigation: <a href="/admin">Trang quản trị</a>,
+      onLogout,
+      sessionError: 'Đăng xuất chưa thành công.',
+    })
+    expect(screen.getByText('Dữ liệu PostgreSQL')).toBeInTheDocument()
+    expect(screen.getByText('admin@example.com')).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: 'Trang quản trị' }),
+    ).toHaveAttribute('href', '/admin')
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Đăng xuất chưa thành công.',
+    )
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: 'Đăng xuất' }))
+    expect(onLogout).toHaveBeenCalledOnce()
+  })
+
+  it('creates the first bank from the empty state and sends a nullable description', async () => {
+    const onCreateBank = vi.fn()
+    renderWorkspace({ banks: [], questions: [], onCreateBank })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Thêm ngân hàng' }))
+    const dialog = screen.getByRole('dialog', { name: 'Thêm ngân hàng' })
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /Tên ngân hàng/ }),
+      '  Kiến trúc  ',
+    )
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Mô tả' }),
+      '   ',
+    )
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Thêm ngân hàng' }),
+    )
+    expect(onCreateBank).toHaveBeenCalledWith({
+      name: 'Kiến trúc',
+      description: null,
+    })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('validates bank name and description limits before submitting', async () => {
+    const onCreateBank = vi.fn()
+    renderWorkspace({ onCreateBank })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Thêm ngân hàng' }))
+    const dialog = screen.getByRole('dialog', { name: 'Thêm ngân hàng' })
+    const name = within(dialog).getByRole('textbox', { name: /Tên ngân hàng/ })
+    const description = within(dialog).getByRole('textbox', { name: 'Mô tả' })
+    const submit = within(dialog).getByRole('button', {
+      name: 'Thêm ngân hàng',
+    })
+    await user.click(submit)
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'Tên ngân hàng cần từ 1 đến 120 ký tự.',
+    )
+    expect(name).toHaveAttribute('maxLength', '120')
+    expect(description).toHaveAttribute('maxLength', '500')
+    fireEvent.change(name, { target: { value: 'a'.repeat(121) } })
+    await user.click(submit)
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'Tên ngân hàng cần từ 1 đến 120 ký tự.',
+    )
+    fireEvent.change(name, { target: { value: 'Valid bank' } })
+    fireEvent.change(description, { target: { value: 'a'.repeat(501) } })
+    await user.click(submit)
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'Mô tả không được vượt quá 500 ký tự.',
+    )
+    expect(onCreateBank).not.toHaveBeenCalled()
+  })
+
+  it('updates the selected bank with a trimmed payload', async () => {
+    const onUpdateBank = vi.fn()
+    renderWorkspace({ onUpdateBank })
+    const user = userEvent.setup()
+    await user.click(
+      screen.getByRole('button', { name: /Lập trình hướng đối tượng/ }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Sửa ngân hàng' }))
+    const dialog = screen.getByRole('dialog', { name: 'Chỉnh sửa ngân hàng' })
+    const name = within(dialog).getByRole('textbox', { name: /Tên ngân hàng/ })
+    const description = within(dialog).getByRole('textbox', { name: 'Mô tả' })
+    expect(name).toHaveValue(mockQuestionBanks[1].name)
+    await user.clear(name)
+    await user.type(name, '  OOP cập nhật  ')
+    await user.clear(description)
+    await user.type(description, '  Nội dung mới  ')
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Lưu thay đổi' }),
+    )
+    expect(onUpdateBank).toHaveBeenCalledWith(mockQuestionBanks[1].id, {
+      name: 'OOP cập nhật',
+      description: 'Nội dung mới',
+    })
+  })
+
+  it('keeps bank errors visible and explains how to resolve a nonempty-bank conflict', async () => {
+    const onDeleteBank = vi.fn().mockRejectedValue({
+      status: 409,
+      problem: { detail: 'Bank is not empty' },
+    })
+    renderWorkspace({ onDeleteBank })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Xóa ngân hàng' }))
+    const dialog = screen.getByRole('dialog', { name: 'Xóa ngân hàng?' })
+    expect(
+      within(dialog).getByText(mockQuestionBanks[0].name),
+    ).toBeInTheDocument()
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Xóa ngân hàng' }),
+    )
+    expect(onDeleteBank).toHaveBeenCalledWith(mockQuestionBanks[0].id)
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'Hãy xóa hết câu hỏi trước khi xóa ngân hàng.',
+    )
+    onDeleteBank.mockResolvedValueOnce(null)
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Xóa ngân hàng' }),
+    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('renders server validation details without discarding the entered bank data', async () => {
+    const onCreateBank = vi.fn().mockRejectedValue({
+      status: 400,
+      problem: { errors: { Name: ['Tên ngân hàng không hợp lệ.'] } },
+    })
+    renderWorkspace({ onCreateBank })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Thêm ngân hàng' }))
+    const dialog = screen.getByRole('dialog', { name: 'Thêm ngân hàng' })
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /Tên ngân hàng/ }),
+      'Ngân hàng mới',
+    )
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Thêm ngân hàng' }),
+    )
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'Tên ngân hàng không hợp lệ.',
+    )
+    expect(
+      within(dialog).getByRole('textbox', { name: /Tên ngân hàng/ }),
+    ).toHaveValue('Ngân hàng mới')
+  })
+
+  it('prevents dismissing or submitting a bank form twice while saving', async () => {
+    let resolveCreate
+    const onCreateBank = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveCreate = resolve
+        }),
+    )
+    renderWorkspace({ onCreateBank })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Thêm ngân hàng' }))
+    const dialog = screen.getByRole('dialog', { name: 'Thêm ngân hàng' })
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /Tên ngân hàng/ }),
+      'Ngân hàng mới',
+    )
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Thêm ngân hàng' }),
+    )
+    expect(dialog).toHaveAttribute('aria-busy', 'true')
+    expect(
+      within(dialog).getByRole('button', { name: 'Đóng hộp thoại' }),
+    ).toBeDisabled()
+    expect(within(dialog).getByRole('button', { name: 'Hủy' })).toBeDisabled()
+    await user.keyboard('{Escape}')
+    fireEvent.mouseDown(dialog.parentElement)
+    fireEvent.submit(dialog.querySelector('form'))
+    expect(onCreateBank).toHaveBeenCalledOnce()
+    expect(dialog).toBeInTheDocument()
+    await act(async () => resolveCreate({ id: 'created-bank-id' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('traps keyboard focus in the dialog and restores focus on cancel', async () => {
+    renderWorkspace({ onCreateBank: vi.fn() })
+    const user = userEvent.setup()
+    const trigger = screen.getByRole('button', { name: 'Thêm ngân hàng' })
+    await user.click(trigger)
+    const dialog = screen.getByRole('dialog', { name: 'Thêm ngân hàng' })
+    expect(
+      within(dialog).getByRole('button', { name: 'Đóng hộp thoại' }),
+    ).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(
+      within(dialog).getByRole('button', { name: 'Thêm ngân hàng' }),
+    ).toHaveFocus()
+    await user.tab()
+    expect(
+      within(dialog).getByRole('button', { name: 'Đóng hộp thoại' }),
+    ).toHaveFocus()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+  })
+
+  it.each([
+    [
+      {
+        status: 400,
+        problem: { errors: { Content: ['Nội dung không hợp lệ.'] } },
+      },
+      'Nội dung không hợp lệ.',
+    ],
+    [{ status: 401 }, 'Phiên đăng nhập đã hết hạn.'],
+    [{ status: 403 }, 'Bạn không có quyền'],
+    [{ status: 404 }, 'Dữ liệu không còn tồn tại.'],
+    [
+      { status: 500, problem: { detail: 'Dịch vụ tạm thời không khả dụng.' } },
+      'Dịch vụ tạm thời không khả dụng.',
+    ],
+  ])(
+    'shows question mutation errors and keeps the dialog open (%j)',
+    async (error, expected) => {
+      renderWorkspace({ onCreateQuestion: vi.fn().mockRejectedValue(error) })
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('button', { name: 'Thêm câu hỏi' }))
+      const dialog = screen.getByRole('dialog', { name: 'Thêm câu hỏi' })
+      await user.type(
+        within(dialog).getByRole('textbox', { name: /Nội dung câu hỏi/ }),
+        'Nội dung mới',
+      )
+      await user.click(
+        within(dialog).getByRole('button', { name: 'Thêm câu hỏi' }),
+      )
+      expect(within(dialog).getByRole('alert')).toHaveTextContent(expected)
+      expect(dialog).toBeInTheDocument()
+    },
+  )
 })

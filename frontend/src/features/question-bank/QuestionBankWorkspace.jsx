@@ -89,36 +89,95 @@ function EmptyState({ title, description, action }) {
   )
 }
 
-function Modal({ title, description, children, onClose, labelledBy }) {
+function operationError(error, fallback, deletingBank = false) {
+  const status = error?.status ?? error?.problem?.status
+  if (status === 401)
+    return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
+  if (status === 403) return 'Bạn không có quyền thực hiện thao tác này.'
+  if (status === 404)
+    return 'Dữ liệu không còn tồn tại. Vui lòng đóng hộp thoại và tải lại trang.'
+  if (status === 409 && deletingBank)
+    return 'Ngân hàng vẫn còn câu hỏi. Hãy xóa hết câu hỏi trước khi xóa ngân hàng.'
+
+  const errors = Object.values(error?.problem?.errors ?? {})
+    .flat()
+    .filter((message) => typeof message === 'string')
+  return errors.join(' ') || error?.problem?.detail || fallback
+}
+
+function Modal({
+  title,
+  description,
+  children,
+  onClose,
+  labelledBy,
+  busy = false,
+}) {
   const closeRef = useRef(null)
+  const modalRef = useRef(null)
 
   useEffect(() => {
+    const previousFocus = document.activeElement
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     closeRef.current?.focus()
+    return () => {
+      document.body.style.overflow = previousOverflow
+      if (previousFocus?.isConnected) previousFocus.focus()
+    }
+  }, [])
+
+  useEffect(() => {
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape' && !busy) onClose()
+      if (event.key !== 'Tab') return
+
+      const controls = [
+        ...(modalRef.current?.querySelectorAll('*') ?? []),
+      ].filter((element) => element.tabIndex >= 0 && !element.disabled)
+      const first = controls?.[0]
+      const last = controls?.[controls.length - 1]
+      if (!first) {
+        event.preventDefault()
+        modalRef.current?.focus()
+      } else if (!controls.includes(document.activeElement)) {
+        event.preventDefault()
+        const target = event.shiftKey ? last : first
+        target.focus()
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  }, [busy, onClose])
 
   return (
     <div
       className="qb-modal-backdrop"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
+        if (!busy && event.target === event.currentTarget) onClose()
       }}
     >
       <section
         className="qb-modal"
+        ref={modalRef}
         role="dialog"
+        tabIndex={-1}
         aria-modal="true"
         aria-labelledby={labelledBy}
+        aria-describedby={`${labelledBy}-description`}
+        aria-busy={busy}
       >
         <div className="qb-modal__head">
           <div>
             <p className="qb-eyebrow">Ngân hàng câu hỏi</p>
             <h2 id={labelledBy}>{title}</h2>
-            <p>{description}</p>
+            <p id={`${labelledBy}-description`}>{description}</p>
           </div>
           <button
             ref={closeRef}
@@ -126,6 +185,7 @@ function Modal({ title, description, children, onClose, labelledBy }) {
             type="button"
             aria-label="Đóng hộp thoại"
             onClick={onClose}
+            disabled={busy}
           >
             <Icon name="close" size={19} />
           </button>
@@ -140,9 +200,11 @@ function QuestionFormDialog({ mode, question, bank, onClose, onSubmit }) {
   const [content, setContent] = useState(question?.content ?? '')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const pendingRef = useRef(false)
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (pendingRef.current) return
     const trimmed = content.trim()
     if (!trimmed || trimmed.length > 2000) {
       setError('Nội dung cần từ 1 đến 2000 ký tự.')
@@ -150,13 +212,17 @@ function QuestionFormDialog({ mode, question, bank, onClose, onSubmit }) {
     }
 
     setError('')
+    pendingRef.current = true
     setSubmitting(true)
     try {
       await onSubmit({ content: trimmed })
       onClose()
-    } catch {
-      setError('Không thể lưu câu hỏi. Vui lòng thử lại.')
+    } catch (error) {
+      setError(
+        operationError(error, 'Không thể lưu câu hỏi. Vui lòng thử lại.'),
+      )
     } finally {
+      pendingRef.current = false
       setSubmitting(false)
     }
   }
@@ -167,6 +233,7 @@ function QuestionFormDialog({ mode, question, bank, onClose, onSubmit }) {
       description={`Trong ngân hàng “${bank.name}”`}
       onClose={onClose}
       labelledBy="qb-form-title"
+      busy={submitting}
     >
       <form onSubmit={handleSubmit} noValidate>
         <label className="qb-label" htmlFor="qb-question-content">
@@ -181,14 +248,17 @@ function QuestionFormDialog({ mode, question, bank, onClose, onSubmit }) {
           }}
           maxLength={2000}
           rows={6}
+          disabled={submitting}
           placeholder="Nhập câu hỏi bạn muốn giảng viên sử dụng..."
           aria-invalid={Boolean(error)}
+          aria-required="true"
           aria-describedby={error ? 'qb-form-error' : 'qb-form-hint'}
         />
         <div className="qb-field-meta">
           <span
             id={error ? 'qb-form-error' : 'qb-form-hint'}
             className={error ? 'qb-field-error' : ''}
+            role={error ? 'alert' : undefined}
           >
             {error || 'Một câu hỏi rõ ràng sẽ giúp buổi vấn đáp hiệu quả hơn.'}
           </span>
@@ -220,30 +290,49 @@ function QuestionFormDialog({ mode, question, bank, onClose, onSubmit }) {
   )
 }
 
-function DeleteConfirmationDialog({ question, onClose, onConfirm }) {
+function DeleteConfirmationDialog({ question, bank, onClose, onConfirm }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const pendingRef = useRef(false)
+  const title = bank ? 'Xóa ngân hàng' : 'Xóa câu hỏi'
 
   async function handleConfirm() {
+    if (pendingRef.current) return
+    pendingRef.current = true
+    setError('')
     setSubmitting(true)
     try {
       await onConfirm()
       onClose()
-    } catch {
-      setError('Không thể xóa câu hỏi. Vui lòng thử lại.')
+    } catch (error) {
+      setError(
+        operationError(
+          error,
+          `Không thể ${title.toLowerCase()}. Vui lòng thử lại.`,
+          Boolean(bank),
+        ),
+      )
     } finally {
+      pendingRef.current = false
       setSubmitting(false)
     }
   }
 
   return (
     <Modal
-      title="Xóa câu hỏi?"
-      description="Thao tác này không thể hoàn tác."
+      title={`${title}?`}
+      description={
+        bank
+          ? 'Chỉ có thể xóa ngân hàng không còn câu hỏi. Thao tác này không thể hoàn tác.'
+          : 'Thao tác này không thể hoàn tác.'
+      }
       onClose={onClose}
       labelledBy="qb-delete-title"
+      busy={submitting}
     >
-      <blockquote className="qb-delete-quote">{question.content}</blockquote>
+      <blockquote className="qb-delete-quote">
+        {bank?.name ?? question.content}
+      </blockquote>
       {error && (
         <p className="qb-field-error" role="alert">
           {error}
@@ -264,9 +353,132 @@ function DeleteConfirmationDialog({ question, onClose, onConfirm }) {
           onClick={handleConfirm}
           disabled={submitting}
         >
-          {submitting ? 'Đang xóa...' : 'Xóa câu hỏi'}
+          {submitting ? 'Đang xóa...' : title}
         </button>
       </div>
+    </Modal>
+  )
+}
+
+function BankFormDialog({ bank, onClose, onSubmit }) {
+  const [name, setName] = useState(bank?.name ?? '')
+  const [description, setDescription] = useState(bank?.description ?? '')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const pendingRef = useRef(false)
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    if (pendingRef.current) return
+    const trimmedName = name.trim()
+    const trimmedDescription = description.trim()
+    if (!trimmedName || trimmedName.length > 120) {
+      setError('Tên ngân hàng cần từ 1 đến 120 ký tự.')
+      return
+    }
+    if (trimmedDescription.length > 500) {
+      setError('Mô tả không được vượt quá 500 ký tự.')
+      return
+    }
+
+    pendingRef.current = true
+    setSubmitting(true)
+    setError('')
+    try {
+      await onSubmit({
+        name: trimmedName,
+        description: trimmedDescription || null,
+      })
+      onClose()
+    } catch (error) {
+      setError(
+        operationError(error, 'Không thể lưu ngân hàng. Vui lòng thử lại.'),
+      )
+    } finally {
+      pendingRef.current = false
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <Modal
+      title={bank ? 'Chỉnh sửa ngân hàng' : 'Thêm ngân hàng'}
+      description="Nhóm các câu hỏi theo môn học hoặc chủ đề để quản lý."
+      onClose={onClose}
+      labelledBy="qb-bank-form-title"
+      busy={submitting}
+    >
+      <form onSubmit={handleSubmit} noValidate>
+        <label className="qb-label" htmlFor="qb-bank-name">
+          Tên ngân hàng <span>*</span>
+        </label>
+        <input
+          id="qb-bank-name"
+          value={name}
+          onChange={(event) => {
+            setName(event.target.value)
+            setError('')
+          }}
+          maxLength={120}
+          aria-required="true"
+          disabled={submitting}
+          aria-describedby={error ? 'qb-bank-form-error' : undefined}
+          placeholder="Ví dụ: Kiến trúc phần mềm"
+        />
+        <div className="qb-field-meta">
+          <span>Bắt buộc, tối đa 120 ký tự.</span>
+          <span>{name.length}/120</span>
+        </div>
+        <label
+          className="qb-label qb-label--spaced"
+          htmlFor="qb-bank-description"
+        >
+          Mô tả
+        </label>
+        <textarea
+          id="qb-bank-description"
+          value={description}
+          onChange={(event) => {
+            setDescription(event.target.value)
+            setError('')
+          }}
+          maxLength={500}
+          rows={3}
+          disabled={submitting}
+          aria-describedby={error ? 'qb-bank-form-error' : undefined}
+          placeholder="Mô tả nội dung ngân hàng (không bắt buộc)"
+        />
+        <div className="qb-field-meta">
+          <span>Không bắt buộc, tối đa 500 ký tự.</span>
+          <span>{description.length}/500</span>
+        </div>
+        {error && (
+          <p className="qb-field-error" id="qb-bank-form-error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="qb-modal__actions">
+          <button
+            type="button"
+            className="qb-button qb-button--ghost"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            className="qb-button qb-button--primary"
+            disabled={submitting}
+          >
+            {submitting
+              ? 'Đang lưu...'
+              : bank
+                ? 'Lưu thay đổi'
+                : 'Thêm ngân hàng'}
+          </button>
+        </div>
+      </form>
     </Modal>
   )
 }
@@ -280,6 +492,17 @@ export default function QuestionBankWorkspace({
   onCreateQuestion,
   onUpdateQuestion,
   onDeleteQuestion,
+  onCreateBank,
+  onUpdateBank,
+  onDeleteBank,
+  dataSourceLabel = 'Dữ liệu minh họa',
+  accountLabel = 'Giảng viên',
+  accountDetail = 'Bản xem trước UI',
+  navigation,
+  onLogout,
+  loggingOut = false,
+  logoutDisabled = false,
+  sessionError,
 }) {
   const [selectedBankId, setSelectedBankId] = useState(null)
   const [bankSearch, setBankSearch] = useState('')
@@ -313,7 +536,7 @@ export default function QuestionBankWorkspace({
 
   return (
     <div className="qb-app">
-      <aside className="qb-sidebar" aria-label="Điều hướng bản xem trước">
+      <aside className="qb-sidebar" aria-label="Không gian quản lý câu hỏi">
         <div className="qb-logo">
           <span className="qb-logo__mark">
             <Icon name="layers" size={22} />
@@ -331,10 +554,12 @@ export default function QuestionBankWorkspace({
           <Icon name="book" size={18} /> Ngân hàng câu hỏi
         </div>
         <div className="qb-sidebar__bottom">
-          <span className="qb-avatar">GV</span>
+          <span className="qb-avatar">
+            {accountLabel === 'Admin' ? 'AD' : 'GV'}
+          </span>
           <span>
-            <strong>Giảng viên</strong>
-            <small>Bản xem trước UI</small>
+            <strong>{accountLabel}</strong>
+            <small>{accountDetail}</small>
           </span>
         </div>
       </aside>
@@ -342,12 +567,24 @@ export default function QuestionBankWorkspace({
       <main className="qb-main">
         <div className="qb-topbar">
           <span>
-            Không gian giảng viên <Icon name="arrow" size={14} />{' '}
-            <strong>Ngân hàng câu hỏi</strong>
+            {navigation ?? 'Không gian giảng viên'}{' '}
+            <Icon name="arrow" size={14} /> <strong>Ngân hàng câu hỏi</strong>
           </span>
-          <span className="qb-demo-pill">
-            <span /> Dữ liệu minh họa
-          </span>
+          <div className="qb-topbar__actions">
+            <span className="qb-demo-pill">
+              <span /> {dataSourceLabel}
+            </span>
+            {onLogout && (
+              <button
+                className="qb-button qb-button--ghost"
+                type="button"
+                onClick={onLogout}
+                disabled={loggingOut || logoutDisabled}
+              >
+                {loggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}
+              </button>
+            )}
+          </div>
         </div>
         <div className="qb-content">
           <header className="qb-page-head">
@@ -363,6 +600,12 @@ export default function QuestionBankWorkspace({
               <small>NGÂN HÀNG HIỆN CÓ</small>
             </div>
           </header>
+
+          {sessionError && (
+            <p className="qb-session-error" role="alert">
+              {sessionError}
+            </p>
+          )}
 
           {isLoading ? (
             <section className="qb-panel qb-state" aria-live="polite">
@@ -396,6 +639,17 @@ export default function QuestionBankWorkspace({
               <EmptyState
                 title="Chưa có ngân hàng câu hỏi"
                 description="Các ngân hàng câu hỏi sẽ xuất hiện tại đây khi được tạo."
+                action={
+                  onCreateBank && (
+                    <button
+                      type="button"
+                      className="qb-button qb-button--primary"
+                      onClick={() => setDialog({ type: 'create-bank' })}
+                    >
+                      <Icon name="plus" size={17} /> Thêm ngân hàng
+                    </button>
+                  )
+                }
               />
             </section>
           ) : (
@@ -404,13 +658,22 @@ export default function QuestionBankWorkspace({
                 className="qb-panel qb-bank-panel"
                 aria-label="Danh sách ngân hàng câu hỏi"
               >
-                <div className="qb-panel__heading">
+                <div className="qb-panel__heading qb-panel__heading--banks">
                   <div>
                     <span className="qb-section-number">01 / DANH SÁCH</span>
                     <h2>
                       Ngân hàng <span className="qb-count">{banks.length}</span>
                     </h2>
                   </div>
+                  {onCreateBank && (
+                    <button
+                      className="qb-button qb-button--outline"
+                      type="button"
+                      onClick={() => setDialog({ type: 'create-bank' })}
+                    >
+                      <Icon name="plus" size={17} /> Thêm ngân hàng
+                    </button>
+                  )}
                 </div>
                 <label className="qb-search">
                   <Icon name="search" size={18} />
@@ -478,6 +741,32 @@ export default function QuestionBankWorkspace({
                     {bankQuestions.length} CÂU HỎI
                   </span>
                 </div>
+                {(onUpdateBank || onDeleteBank) && (
+                  <div className="qb-bank-actions">
+                    {onUpdateBank && (
+                      <button
+                        className="qb-button qb-button--ghost"
+                        type="button"
+                        onClick={() =>
+                          setDialog({ type: 'edit-bank', bank: selectedBank })
+                        }
+                      >
+                        <Icon name="edit" size={16} /> Sửa ngân hàng
+                      </button>
+                    )}
+                    {onDeleteBank && (
+                      <button
+                        className="qb-button qb-button--ghost qb-bank-delete"
+                        type="button"
+                        onClick={() =>
+                          setDialog({ type: 'delete-bank', bank: selectedBank })
+                        }
+                      >
+                        <Icon name="trash" size={16} /> Xóa ngân hàng
+                      </button>
+                    )}
+                  </div>
+                )}
                 <div className="qb-questions-toolbar">
                   <label className="qb-search">
                     <Icon name="search" size={18} />
@@ -573,10 +862,42 @@ export default function QuestionBankWorkspace({
           )}
           <footer className="qb-footer">
             <span>© 2026 AIVES · AI-powered Viva Exam System</span>
-            <span>Bản thiết kế UI/UX · Issue #11</span>
+            <span>
+              {onCreateBank
+                ? 'Quản lý ngân hàng và câu hỏi'
+                : 'Bản thiết kế UI/UX · Issue #11'}
+            </span>
           </footer>
         </div>
       </main>
+
+      {dialog?.type === 'create-bank' && (
+        <BankFormDialog
+          onClose={closeDialog}
+          onSubmit={async (request) => {
+            const bank = await onCreateBank(request)
+            if (bank?.id) {
+              setSelectedBankId(bank.id)
+              setBankSearch('')
+              setQuestionSearch('')
+            }
+          }}
+        />
+      )}
+      {dialog?.type === 'edit-bank' && (
+        <BankFormDialog
+          bank={dialog.bank}
+          onClose={closeDialog}
+          onSubmit={(request) => onUpdateBank(dialog.bank.id, request)}
+        />
+      )}
+      {dialog?.type === 'delete-bank' && (
+        <DeleteConfirmationDialog
+          bank={dialog.bank}
+          onClose={closeDialog}
+          onConfirm={() => onDeleteBank(dialog.bank.id)}
+        />
+      )}
 
       {dialog?.type === 'create' && (
         <QuestionFormDialog

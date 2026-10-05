@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1880" height="1010" viewBox="0 0 1880 1010" role="img" aria-labelledby="title description">
+  <title id="title">Question Bank CRUD — MVP Class Diagram</title>
+  <desc id="description">The Domain has QuestionBank and Question in a one-to-zero-or-many relationship. The Application has bank and question service interfaces and implementations sharing IQuestionBankRepository. The Infrastructure implements that repository with PostgreSQL and QuestionBankDbContext. API endpoints call both services.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0 L10 4 L0 8 Z" fill="#385c57"/></marker>
+    <marker id="implements" markerWidth="12" markerHeight="11" refX="11" refY="5.5" orient="auto"><path d="M0 0 L11 5.5 L0 11 Z" fill="#f8faf8" stroke="#385c57" stroke-width="1.6"/></marker>
+    <style>
+      .canvas{fill:#f8faf8}.lane{fill:#ffffff;stroke:#d9e4df;stroke-width:2}.domain{fill:#eaf1f8;stroke:#7197b4;stroke-width:2}.app{fill:#edf5ee;stroke:#81a78b;stroke-width:2}.infra{fill:#f9eff2;stroke:#bb8da1;stroke-width:2}.api{fill:#f7f3e8;stroke:#b4a16d;stroke-width:2}
+      .title{font:700 30px Arial,sans-serif;fill:#19352f}.subtitle{font:15px Arial,sans-serif;fill:#5c746d}.laneTitle{font:700 17px Arial,sans-serif;fill:#425e58;letter-spacing:2px}.name{font:700 20px Arial,sans-serif;fill:#19352f}.stereo{font:italic 13px Arial,sans-serif;fill:#617a73}.member{font:15px Consolas,monospace;fill:#25443c}.note{font:14px Arial,sans-serif;fill:#617a73}.edge{fill:none;stroke:#385c57;stroke-width:2.3;marker-end:url(#arrow)}.implements{fill:none;stroke:#385c57;stroke-width:2.3;stroke-dasharray:8 6;marker-end:url(#implements)}.divider{stroke:#aac0ba;stroke-width:1.2}
+    </style>
+  </defs>
+  <rect class="canvas" width="1880" height="1010"/>
+  <text class="title" x="36" y="48">Question Bank CRUD · Class Diagram</text>
+  <text class="subtitle" x="37" y="76">MVP implementation · ASP.NET Core 10 · EF Core / PostgreSQL · source: class-diagram-question-bank.mmd</text>
+  <rect class="lane" x="28" y="105" width="445" height="840" rx="14"/>
+  <rect class="lane" x="491" y="105" width="744" height="840" rx="14"/>
+  <rect class="lane" x="1253" y="105" width="599" height="840" rx="14"/>
+  <text class="laneTitle" x="50" y="142">DOMAIN</text><text class="laneTitle" x="513" y="142">APPLICATION / API</text><text class="laneTitle" x="1275" y="142">INFRASTRUCTURE</text>
+
+  <rect class="domain" x="51" y="176" width="398" height="213" rx="10"/>
+  <text class="name" x="69" y="207">QuestionBank</text><text class="stereo" x="69" y="229">Domain entity</text><path class="divider" d="M51 239 H449"/>
+  <text class="member" x="69" y="265">+ Id: Guid</text><text class="member" x="69" y="291">+ Name: string (1..120)</text><text class="member" x="69" y="317">+ Description: string? (≤500)</text><text class="member" x="69" y="343">+ CreatedAt: DateTimeOffset</text><path class="divider" d="M51 352 H449"/>
+  <text class="member" x="69" y="375">+ UpdateDetails(name, description)</text>
+
+  <rect class="domain" x="51" y="530" width="398" height="213" rx="10"/>
+  <text class="name" x="69" y="561">Question</text><text class="stereo" x="69" y="583">Domain entity</text><path class="divider" d="M51 593 H449"/>
+  <text class="member" x="69" y="619">+ Id: Guid</text><text class="member" x="69" y="645">+ QuestionBankId: Guid (FK)</text><text class="member" x="69" y="671">+ Content: string (1..2000)</text><text class="member" x="69" y="697">+ CreatedAt: DateTimeOffset</text><path class="divider" d="M51 706 H449"/>
+  <text class="member" x="69" y="729">+ UpdateContent(content)</text>
+  <path d="M250 389 V530" fill="none" stroke="#385c57" stroke-width="2.3"/>
+  <text class="note" x="265" y="435">1 bank</text><text class="note" x="265" y="457">0..* questions</text><text class="note" x="265" y="479">via QuestionBankId</text>
+
+  <rect class="app" x="513" y="177" width="319" height="146" rx="10"/>
+  <text class="name" x="530" y="207">IQuestionBankService</text><text class="stereo" x="530" y="227">interface</text><path class="divider" d="M513 236 H832"/>
+  <text class="member" x="530" y="260">+ GetAllAsync / GetByIdAsync</text><text class="member" x="530" y="284">+ CreateAsync / UpdateAsync</text><text class="member" x="530" y="308">+ DeleteAsync</text>
+  <rect class="app" x="868" y="177" width="344" height="146" rx="10"/>
+  <text class="name" x="885" y="207">QuestionBankService</text><text class="stereo" x="885" y="227">implements IQuestionBankService</text><path class="divider" d="M868 236 H1212"/>
+  <text class="member" x="885" y="260">+ GetAllAsync / GetByIdAsync</text><text class="member" x="885" y="284">+ CreateAsync / UpdateAsync</text><text class="member" x="885" y="308">+ DeleteAsync</text>
+
+  <rect class="app" x="513" y="356" width="319" height="146" rx="10"/>
+  <text class="name" x="530" y="386">IQuestionService</text><text class="stereo" x="530" y="406">interface</text><path class="divider" d="M513 415 H832"/>
+  <text class="member" x="530" y="439">+ GetByQuestionBankIdAsync</text><text class="member" x="530" y="463">+ GetByIdAsync / CreateAsync</text><text class="member" x="530" y="487">+ UpdateAsync / DeleteAsync</text>
+  <rect class="app" x="868" y="356" width="344" height="146" rx="10"/>
+  <text class="name" x="885" y="386">QuestionService</text><text class="stereo" x="885" y="406">implements IQuestionService</text><path class="divider" d="M868 415 H1212"/>
+  <text class="member" x="885" y="439">+ GetByQuestionBankIdAsync</text><text class="member" x="885" y="463">+ GetByIdAsync / CreateAsync</text><text class="member" x="885" y="487">+ UpdateAsync / DeleteAsync</text>
+
+  <rect class="app" x="513" y="574" width="699" height="173" rx="10"/>
+  <text class="name" x="530" y="604">IQuestionBankRepository</text><text class="stereo" x="530" y="624">Application interface · shared by both services</text><path class="divider" d="M513 635 H1212"/>
+  <text class="member" x="530" y="662">+ GetAllAsync / GetByIdAsync / AddAsync</text>
+  <text class="member" x="530" y="688">+ UpdateAsync / DeleteAsync / GetQuestionsAsync</text>
+  <text class="member" x="530" y="714">+ GetQuestionByIdAsync / AddQuestionAsync</text>
+  <text class="member" x="530" y="739">+ UpdateQuestionAsync / DeleteQuestionAsync</text>
+  <rect class="api" x="513" y="803" width="699" height="93" rx="10"/>
+  <text class="name" x="530" y="834">QuestionBankEndpoints</text><text class="stereo" x="530" y="855">API · delegates HTTP requests to both service interfaces</text>
+  <text class="member" x="530" y="881">+ MapQuestionBankEndpoints(group)</text>
+
+  <rect class="infra" x="1275" y="233" width="554" height="188" rx="10"/>
+  <text class="name" x="1292" y="264">PostgresQuestionBankRepository</text><text class="stereo" x="1292" y="285">implements IQuestionBankRepository</text><path class="divider" d="M1275 295 H1829"/>
+  <text class="member" x="1292" y="324">- db: QuestionBankDbContext</text>
+  <text class="member" x="1292" y="352">+ bank CRUD + nested question CRUD</text>
+  <text class="member" x="1292" y="380">+ Delete bank: reject when questions exist</text>
+  <rect class="infra" x="1275" y="601" width="554" height="164" rx="10"/>
+  <text class="name" x="1292" y="632">QuestionBankDbContext</text><text class="stereo" x="1292" y="653">EF Core · Npgsql</text><path class="divider" d="M1275 663 H1829"/>
+  <text class="member" x="1292" y="691">+ QuestionBanks: DbSet&lt;QuestionBank&gt;</text>
+  <text class="member" x="1292" y="719">+ Questions: DbSet&lt;Question&gt;</text>
+  <text class="member" x="1292" y="747">+ Roles / Users: auth tables</text>
+
+  <path class="implements" d="M868 207 H832"/><path class="implements" d="M868 386 H832"/>
+  <path class="edge" d="M868 275 H850 V574"/><path class="edge" d="M1130 502 V574"/>
+  <path class="implements" d="M1275 327 H1235 V655 H1212"/>
+  <path class="edge" d="M1550 421 V601"/>
+  <text class="note" x="1138" y="550">uses</text><text class="note" x="1563" y="525">uses</text>
+  <text class="note" x="36" y="959">QuestionBank has no owner/user FK in this MVP. Role access is enforced by API authorization.</text>
+  <text class="note" x="36" y="984">Scope: implemented Question Bank / Question CRUD. Exam, AI, STT and TTS classes are intentionally outside this diagram.</text>
+</svg>

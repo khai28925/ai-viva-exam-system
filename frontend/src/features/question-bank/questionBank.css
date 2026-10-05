@@ -118,6 +118,7 @@
 .qb-sidebar__bottom small {
   margin-top: 3px;
   color: #9fbcb3;
+  overflow-wrap: anywhere;
 }
 
 .qb-avatar {
@@ -158,6 +159,24 @@
 .qb-topbar strong {
   color: #294940;
   font-weight: 600;
+}
+
+.qb-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qb-topbar a {
+  color: #35644c;
+}
+
+.qb-session-error {
+  padding: 12px 16px;
+  border: 1px solid #ecc6bf;
+  border-radius: 8px;
+  color: #a33e34;
+  background: #fff4f0;
 }
 
 .qb-demo-pill {
@@ -272,6 +291,26 @@
     700 20px/1.25 'Manrope',
     sans-serif;
   letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.qb-panel__heading--banks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.qb-bank-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 27px 18px;
+}
+
+.qb-bank-delete {
+  color: #a8493f;
 }
 
 .qb-count {
@@ -431,6 +470,7 @@
   margin: 9px 0 0;
   color: #8b9a91;
   font-size: 11px;
+  overflow-wrap: anywhere;
 }
 
 .qb-question-total {
@@ -540,6 +580,7 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .qb-question__body span {
@@ -577,6 +618,11 @@
 .qb-icon-button--danger:focus-visible {
   color: #b95046;
   background: #fcf0ee;
+}
+
+.qb-icon-button:disabled {
+  cursor: wait;
+  opacity: 0.5;
 }
 
 .qb-questions-panel__foot {
@@ -726,6 +772,11 @@
   color: #c76648;
 }
 
+.qb-label--spaced {
+  margin-top: 20px;
+}
+
+.qb-modal input,
 .qb-modal textarea {
   display: block;
   width: 100%;
@@ -739,11 +790,13 @@
   resize: vertical;
 }
 
+.qb-modal input:focus,
 .qb-modal textarea:focus {
   border-color: #86a797;
   box-shadow: 0 0 0 3px rgb(77 143 107 / 11%);
 }
 
+.qb-modal input[aria-invalid='true'],
 .qb-modal textarea[aria-invalid='true'] {
   border-color: #c76d5b;
 }
@@ -778,6 +831,7 @@
   background: #f7f8f4;
   font-size: 13px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .qb-sr-only {
@@ -830,8 +884,11 @@
 
 @media (max-width: 670px) {
   .qb-topbar {
-    height: 58px;
-    padding: 0 18px;
+    min-height: 58px;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 18px;
   }
   .qb-topbar > span:first-child {
     max-width: 55%;

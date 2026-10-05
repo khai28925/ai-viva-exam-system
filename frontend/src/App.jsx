@@ -7,6 +7,7 @@ import ForbiddenPage from './pages/ForbiddenPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import RoleDashboard from './pages/RoleDashboard.jsx'
+import QuestionBankPage from './features/question-bank/QuestionBankPage.jsx'
 
 export default function App() {
   return (
@@ -16,6 +17,14 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/about" element={<HomePage />} />
         <Route path="/forbidden" element={<ForbiddenPage />} />
+        <Route
+          path="/question-banks"
+          element={
+            <RequireRole allowed={['LECTURER', 'ADMIN']}>
+              <QuestionBankPage />
+            </RequireRole>
+          }
+        />
         <Route
           path="/admin"
           element={

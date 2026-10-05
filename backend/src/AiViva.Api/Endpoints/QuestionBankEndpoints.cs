@@ -25,7 +25,7 @@ public static class QuestionBankEndpoints
         .WithSummary("List all question banks.")
         .Produces<IReadOnlyCollection<QuestionBankDto>>(StatusCodes.Status200OK);
 
-        banks.MapGet("/{bankId:guid}", async (
+        banks.MapGet("/{bankId}", async (
             Guid bankId,
             IQuestionBankService service,
             CancellationToken ct) =>
@@ -56,7 +56,7 @@ public static class QuestionBankEndpoints
         .Produces<QuestionBankDto>(StatusCodes.Status201Created)
         .ProducesValidationProblem();
 
-        banks.MapPut("/{bankId:guid}", async (
+        banks.MapPut("/{bankId}", async (
             Guid bankId,
             UpdateQuestionBankRequest request,
             IQuestionBankService service,
@@ -76,7 +76,7 @@ public static class QuestionBankEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound);
 
-        banks.MapDelete("/{bankId:guid}", async (
+        banks.MapDelete("/{bankId}", async (
             Guid bankId,
             IQuestionBankService service,
             CancellationToken ct) =>
@@ -102,7 +102,7 @@ public static class QuestionBankEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict);
 
         // Question Sub-resource Endpoints
-        banks.MapGet("/{bankId:guid}/questions", async (
+        banks.MapGet("/{bankId}/questions", async (
             Guid bankId,
             IQuestionService service,
             CancellationToken ct) =>
@@ -120,7 +120,7 @@ public static class QuestionBankEndpoints
         .Produces<IReadOnlyCollection<QuestionDto>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound);
 
-        banks.MapGet("/{bankId:guid}/questions/{questionId:guid}", async (
+        banks.MapGet("/{bankId}/questions/{questionId}", async (
             Guid bankId,
             Guid questionId,
             IQuestionService service,
@@ -139,7 +139,7 @@ public static class QuestionBankEndpoints
         .Produces<QuestionDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound);
 
-        banks.MapPost("/{bankId:guid}/questions", async (
+        banks.MapPost("/{bankId}/questions", async (
             Guid bankId,
             CreateQuestionRequest request,
             IQuestionService service,
@@ -159,7 +159,7 @@ public static class QuestionBankEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound);
 
-        banks.MapPut("/{bankId:guid}/questions/{questionId:guid}", async (
+        banks.MapPut("/{bankId}/questions/{questionId}", async (
             Guid bankId,
             Guid questionId,
             UpdateQuestionRequest request,
@@ -180,7 +180,7 @@ public static class QuestionBankEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound);
 
-        banks.MapDelete("/{bankId:guid}/questions/{questionId:guid}", async (
+        banks.MapDelete("/{bankId}/questions/{questionId}", async (
             Guid bankId,
             Guid questionId,
             IQuestionService service,
