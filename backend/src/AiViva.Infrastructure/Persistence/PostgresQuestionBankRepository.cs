@@ -68,6 +68,11 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db) : I
             return QuestionBankDeleteResult.HasQuestions;
         }
 
+        if (await db.ExamSessions.AnyAsync(session => session.QuestionBankId == id, cancellationToken))
+        {
+            return QuestionBankDeleteResult.HasExamSessions;
+        }
+
         try
         {
             var deleted = await db.QuestionBanks
@@ -77,7 +82,9 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db) : I
         }
         catch (PostgresException exception) when (exception.SqlState == PostgresErrorCodes.ForeignKeyViolation)
         {
-            return QuestionBankDeleteResult.HasQuestions;
+            return exception.ConstraintName?.Contains("exam_sessions", StringComparison.Ordinal) == true
+                ? QuestionBankDeleteResult.HasExamSessions
+                : QuestionBankDeleteResult.HasQuestions;
         }
     }
 

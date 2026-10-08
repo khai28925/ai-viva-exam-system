@@ -22,6 +22,83 @@ namespace AiViva.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("AiViva.Domain.Entities.ExamAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ExamSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("exam_session_id");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("student_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId")
+                        .HasDatabaseName("ix_exam_attempts_student_id");
+
+                    b.HasIndex("ExamSessionId", "StudentId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_exam_attempts_session_student");
+
+                    b.ToTable("exam_attempts", (string)null);
+                });
+
+            modelBuilder.Entity("AiViva.Domain.Entities.ExamSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("QuestionBankId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("question_bank_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_exam_sessions_created_by");
+
+                    b.HasIndex("QuestionBankId")
+                        .HasDatabaseName("ix_exam_sessions_question_bank_id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_exam_sessions_status");
+
+                    b.ToTable("exam_sessions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_exam_sessions_status", "status IN ('Draft', 'Open', 'Closed')");
+                        });
+                });
+
             modelBuilder.Entity("AiViva.Domain.Entities.Question", b =>
                 {
                     b.Property<Guid>("Id")
@@ -158,6 +235,36 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_users_role_id");
 
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("AiViva.Domain.Entities.ExamAttempt", b =>
+                {
+                    b.HasOne("AiViva.Domain.Entities.ExamSession", null)
+                        .WithMany()
+                        .HasForeignKey("ExamSessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AiViva.Domain.Entities.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AiViva.Domain.Entities.ExamSession", b =>
+                {
+                    b.HasOne("AiViva.Domain.Entities.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AiViva.Domain.Entities.QuestionBank", null)
+                        .WithMany()
+                        .HasForeignKey("QuestionBankId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AiViva.Domain.Entities.Question", b =>

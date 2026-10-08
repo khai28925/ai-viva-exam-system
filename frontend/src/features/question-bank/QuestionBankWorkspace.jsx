@@ -96,6 +96,12 @@ function operationError(error, fallback, deletingBank = false) {
   if (status === 403) return 'Bạn không có quyền thực hiện thao tác này.'
   if (status === 404)
     return 'Dữ liệu không còn tồn tại. Vui lòng đóng hộp thoại và tải lại trang.'
+  if (
+    status === 409 &&
+    deletingBank &&
+    error?.problem?.code === 'bank_has_exam_sessions'
+  )
+    return 'Ngân hàng đang được phiên thi sử dụng nên không thể xóa. Hãy giữ ngân hàng để bảo toàn dữ liệu phiên thi.'
   if (status === 409 && deletingBank)
     return 'Ngân hàng vẫn còn câu hỏi. Hãy xóa hết câu hỏi trước khi xóa ngân hàng.'
 

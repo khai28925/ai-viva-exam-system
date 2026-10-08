@@ -6,9 +6,12 @@ const content = {
     title: 'Không gian sinh viên',
     eyebrow: 'STUDENT WORKSPACE',
     description:
-      'Theo dõi lịch thi, tham gia phiên vấn đáp và xem kết quả của bạn.',
+      'Xem các phiên đang mở và vào xem câu hỏi do giảng viên chuẩn bị.',
     cards: [
-      ['Lịch thi', 'Các kỳ thi được phân công sẽ hiển thị tại đây.'],
+      [
+        'Phiên thi',
+        'Vào phiên đang mở để xem câu hỏi. Lượt tham gia được lưu vào hệ thống.',
+      ],
       ['Kết quả', 'Báo cáo và phản hồi sau buổi thi sẽ hiển thị tại đây.'],
     ],
   },
@@ -21,7 +24,10 @@ const content = {
         'Ngân hàng câu hỏi',
         'Tạo ngân hàng, quản lý câu hỏi và lưu trực tiếp vào PostgreSQL.',
       ],
-      ['Phiên thi', 'Lịch thi và phiên vấn đáp sẽ hiển thị tại đây.'],
+      [
+        'Phiên thi',
+        'Tạo, sửa, xóa phiên thi và mở phiên cho sinh viên tham gia.',
+      ],
     ],
   },
 }
@@ -44,11 +50,22 @@ export default function RoleDashboard({ role }) {
                 Mở ngân hàng câu hỏi
               </Link>
             )}
+            {((role === 'LECTURER' && index === 1) ||
+              (role === 'STUDENT' && index === 0)) && (
+              <Link
+                className="exam-button exam-button--primary"
+                to="/exam-sessions"
+              >
+                {role === 'STUDENT'
+                  ? 'Xem phiên thi và vào thi'
+                  : 'Quản lý phiên thi'}
+              </Link>
+            )}
           </section>
         ))}
       </div>
       <p className="auth-workspace__notice">
-        Các chức năng thi đang được phát triển và sẽ xuất hiện tại đây.
+        Phiên thi hiện ở mức cơ bản: chưa có nộp bài, chấm điểm, AI hoặc ghi âm.
       </p>
     </SessionLayout>
   )

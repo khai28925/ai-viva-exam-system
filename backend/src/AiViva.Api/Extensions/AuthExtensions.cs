@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using AiViva.Application.Accounts;
@@ -13,13 +14,17 @@ public static class AuthPolicies
     public const string AdminOnly = "AdminOnly";
     public const string QuestionBankManage = "QuestionBankManage";
     public const string LoginRateLimit = "LoginRateLimit";
+    public const string ExamSessionRead = "ExamSessionRead";
+    public const string ExamSessionManage = "ExamSessionManage";
+    public const string StudentOnly = "StudentOnly";
 }
 
 public static class AuthExtensions
 {
     public static IServiceCollection AddApiAuth(
         this IServiceCollection services,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IConfiguration configuration)
     {
         services
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -66,6 +71,11 @@ public static class AuthExtensions
 
         services.AddAuthorizationBuilder()
             .AddPolicy(AuthPolicies.AdminOnly, policy => policy.RequireRole(Role.Codes.Admin))
+            .AddPolicy(AuthPolicies.StudentOnly, policy => policy.RequireRole(Role.Codes.Student))
+            .AddPolicy(AuthPolicies.ExamSessionRead,
+                policy => policy.RequireRole(Role.Codes.Admin, Role.Codes.Lecturer, Role.Codes.Student))
+            .AddPolicy(AuthPolicies.ExamSessionManage,
+                policy => policy.RequireRole(Role.Codes.Admin, Role.Codes.Lecturer))
             .AddPolicy(
                 AuthPolicies.QuestionBankManage,
                 policy => policy.RequireRole(Role.Codes.Admin, Role.Codes.Lecturer));
@@ -82,15 +92,43 @@ public static class AuthExtensions
                 : CookieSecurePolicy.Always;
         });
 
+        // Local demos switch between several accounts behind the same Vite proxy.
+        // Only Development can override the limit; all other environments retain 5/minute.
+        var loginPermitLimit = 5;
+        if (environment.IsDevelopment())
+        {
+            loginPermitLimit = int.TryParse(
+                configuration["Authentication:LoginRateLimit:PermitLimit"], out var configuredLimit)
+                ? Math.Clamp(configuredLimit, 1, 60)
+                : 20;
+        }
+
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.OnRejected = async (context, cancellationToken) =>
+            {
+                var retryAfterSeconds = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
+                    ? Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds))
+                    : 60;
+                context.HttpContext.Response.Headers.RetryAfter =
+                    retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
+                context.HttpContext.Response.Headers.CacheControl = "no-store";
+                await Results.Problem(
+                    statusCode: StatusCodes.Status429TooManyRequests,
+                    title: "Too many login attempts",
+                    detail: "Please wait before trying to log in again.",
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["retryAfterSeconds"] = retryAfterSeconds
+                    }).ExecuteAsync(context.HttpContext);
+            };
             options.AddPolicy(AuthPolicies.LoginRateLimit, context =>
                 RateLimitPartition.GetFixedWindowLimiter(
                     context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 5,
+                        PermitLimit = loginPermitLimit,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0,
                         AutoReplenishment = true

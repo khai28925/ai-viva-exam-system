@@ -4,5 +4,6 @@ public enum QuestionBankDeleteResult
 {
     Deleted,
     NotFound,
-    HasQuestions
+    HasQuestions,
+    HasExamSessions
 }
