@@ -14,10 +14,14 @@ public sealed class ExamAttempt
         ExamSessionId = examSessionId;
         StudentId = studentId;
         StartedAt = DateTimeOffset.UtcNow;
+        CreatedAt = StartedAt;
     }
 
     public Guid Id { get; private set; }
     public Guid ExamSessionId { get; private set; }
     public Guid StudentId { get; private set; }
+    public string Status { get; private set; } = "InProgress";
     public DateTimeOffset StartedAt { get; private set; }
+    public DateTimeOffset? CompletedAt { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
 }

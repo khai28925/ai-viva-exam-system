@@ -20,10 +20,13 @@ public sealed class Question
     public Guid Id { get; private set; }
 
     public Guid QuestionBankId { get; private set; }
+    public Guid? ParentQuestionId { get; private set; }
+    public string QuestionType { get; private set; } = "Bank";
 
     public string Content { get; private set; } = string.Empty;
 
     public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset? UpdatedAt { get; private set; }
 
     public void UpdateContent(string content)
     {
@@ -34,5 +37,6 @@ public sealed class Question
         }
 
         Content = normalizedContent;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

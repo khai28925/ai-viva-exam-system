@@ -16,9 +16,11 @@ public sealed class ExamSession
     public Guid Id { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public Guid QuestionBankId { get; private set; }
+    public Guid? ScheduleId { get; private set; }
     public string Status { get; private set; } = Statuses.Draft;
     public Guid CreatedBy { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset? UpdatedAt { get; private set; }
 
     public void UpdateDetails(string title, Guid questionBankId, string status)
     {
@@ -33,6 +35,7 @@ public sealed class ExamSession
         Title = normalizedTitle;
         QuestionBankId = questionBankId;
         Status = status;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     public static class Statuses

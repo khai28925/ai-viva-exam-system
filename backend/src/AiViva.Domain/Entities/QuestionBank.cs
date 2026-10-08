@@ -16,8 +16,10 @@ public sealed class QuestionBank
     public string Name { get; private set; } = string.Empty;
 
     public string? Description { get; private set; }
+    public Guid? CreatedBy { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset? UpdatedAt { get; private set; }
 
     public void UpdateDetails(string name, string? description)
     {
@@ -35,5 +37,6 @@ public sealed class QuestionBank
 
         Name = normalizedName;
         Description = string.IsNullOrEmpty(normalizedDescription) ? null : normalizedDescription;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }
