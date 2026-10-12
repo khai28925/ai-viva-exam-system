@@ -9,6 +9,9 @@ ASP.NET Core Web API theo hướng modular monolith với các project:
 
 ## Chạy local
 
+Xem [hướng dẫn setup PostgreSQL cho cả nhóm](../docs/database-setup.md) để chọn
+Docker Compose hoặc PostgreSQL cài trực tiếp; DBeaver không bắt buộc.
+
 Question Bank dùng PostgreSQL. API cần biến môi trường
 `ConnectionStrings__QuestionBank`; không có fallback in-memory để tránh tưởng
 dữ liệu đã được lưu thật. Không commit chuỗi kết nối hoặc mật khẩu vào repo.

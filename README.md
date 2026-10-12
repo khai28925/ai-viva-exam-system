@@ -39,7 +39,8 @@ Hệ thống thi vấn đáp có hỗ trợ AI cho Entrepreneurship Experience P
 ## Chạy dự án
 
 Question Bank hiện dùng PostgreSQL và yêu cầu đăng nhập. Trước lần chạy đầu,
-thực hiện [setup database, migration và admin](backend/README.md); các lệnh
+thực hiện [hướng dẫn setup database cho thành viên](docs/database-setup.md),
+sau đó xem [bootstrap admin](backend/README.md); các lệnh
 `dotnet run` dưới đây giả định terminal đã có chuỗi kết nối đúng.
 Xem [hướng dẫn demo CRUD FE → BE → PostgreSQL](docs/issue-8-demo.md) để chuẩn bị
 dữ liệu và mở `/question-banks` bằng tài khoản `ADMIN`/`LECTURER`.
