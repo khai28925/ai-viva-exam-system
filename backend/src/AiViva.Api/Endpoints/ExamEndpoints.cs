@@ -7,7 +7,7 @@ public static class ExamEndpoints
 {
     public static RouteGroupBuilder MapExamEndpoints(this RouteGroupBuilder group)
     {
-        var exams = group.MapGroup("/v1/exams");
+        var exams = group.MapGroup("/v1/exams").RequireAuthorization();
 
         exams.MapGet("/", async (
             IExamService examService,

@@ -9,10 +9,19 @@ cập nhật các nhánh triển khai.
 
 - Giảng viên quản lý ngân hàng câu hỏi (`QuestionBank`) và câu hỏi (`Question`).
 - Một ngân hàng có nhiều câu hỏi; mỗi câu hỏi thuộc đúng một ngân hàng.
-- Chưa làm đăng nhập/phân quyền, phiên thi vấn đáp, expected key points, rubric,
+- Đăng nhập/phân quyền được bổ sung theo [auth MVP contract](auth-mvp-contract.md).
+- Chưa làm phiên thi vấn đáp, expected key points, rubric,
   AI, Speech-to-Text hoặc Text-to-Speech trong lát cắt CRUD này.
 - Endpoint `GET /api/v1/exams` hiện có là ví dụ của skeleton, không phải dữ liệu
   hay API của Question Bank.
+
+## Quyền truy cập
+
+Các endpoint Question Bank/Question yêu cầu đăng nhập với vai trò `LECTURER`
+hoặc `ADMIN`. Chưa đăng nhập trả `401`; tài khoản `STUDENT` trả `403`. Request
+`POST`, `PUT`, `DELETE` cần cookie đăng nhập và header `X-CSRF-TOKEN` lấy từ
+`GET /api/v1/auth/csrf`. Hiện phân quyền theo vai trò; schema chưa có người sở
+hữu ngân hàng câu hỏi để giới hạn theo từng giảng viên.
 
 ## Domain và dữ liệu
 
@@ -28,8 +37,9 @@ cập nhật các nhánh triển khai.
 | | `createdAt: DateTimeOffset` | UTC do server sinh, không cho client sửa. |
 
 Entity và repository interface được định nghĩa ở Domain/Application. Tầng
-Infrastructure có adapter in-memory tạm để phát triển API khi chưa có database;
-adapter này không phải PostgreSQL persistence cuối cùng.
+Infrastructure giữ adapter in-memory ban đầu để tham chiếu/kiểm thử, nhưng
+runtime hiện đăng ký `PostgresQuestionBankRepository` và yêu cầu chuỗi kết nối
+PostgreSQL. Không có fallback in-memory khi database thiếu hoặc lỗi.
 
 ## Physical schema PostgreSQL
 
@@ -93,8 +103,10 @@ Danh sách sắp theo `createdAt` tăng dần, cùng thời điểm thì theo `i
 - Lead: giữ contract này và model/interface baseline.
 - BE database: EF Core, DbContext, migration, adapter PostgreSQL theo schema.
 - BE API: endpoint, application service, validation, backend test theo HTTP API.
-- FE: UI với mock response cùng shape; lead nối API sau.
+- FE: UI Issue #11 giữ preview mock response cùng shape; lead nối API thật ở
+  `/question-banks` trong Issue #8, không thay preview thành nguồn dữ liệu thật.
 - Tài liệu: Physical ERD theo đúng hai bảng của MVP.
 
-Khi PostgreSQL adapter hoàn thành, thay đăng ký in-memory của Question Bank bằng
-adapter PostgreSQL tại `AddInfrastructure()`; không cần đổi HTTP contract.
+PostgreSQL adapter đã được đăng ký tại `AddInfrastructure()` qua Issue #9 mà
+không đổi HTTP contract. Phân quyền và tích hợp FE trên nhánh Issue #8 kế thừa
+PR #20; cần merge dependency đó trước khi đưa phần tích hợp vào `develop`.

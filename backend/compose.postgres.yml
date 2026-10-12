@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: aives
+      POSTGRES_USER: aives
+      POSTGRES_PASSWORD: ${AIVES_POSTGRES_PASSWORD:?Set AIVES_POSTGRES_PASSWORD before starting PostgreSQL}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - aives_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aives -d aives"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  aives_postgres_data:
