@@ -16,6 +16,7 @@ public sealed class UserAccount
     public Guid Id { get; private set; }
 
     public string Email { get; private set; } = string.Empty;
+    public string? FullName { get; private set; }
 
     public string NormalizedEmail { get; private set; } = string.Empty;
 
@@ -28,6 +29,7 @@ public sealed class UserAccount
     public bool IsActive { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset? UpdatedAt { get; private set; }
 
     public static string NormalizeEmail(string email) => email.Trim().ToUpperInvariant();
 

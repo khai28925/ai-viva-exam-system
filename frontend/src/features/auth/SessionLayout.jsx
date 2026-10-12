@@ -14,12 +14,14 @@ export default function SessionLayout({
   eyebrow,
   description,
   children,
+  busy = false,
 }) {
   const { user, logout } = useAuth()
   const [loggingOut, setLoggingOut] = useState(false)
   const [error, setError] = useState('')
 
   async function handleLogout() {
+    if (busy || loggingOut) return
     setError('')
     setLoggingOut(true)
     try {
@@ -41,6 +43,7 @@ export default function SessionLayout({
           </span>
         </Link>
         <div className="auth-workspace__identity">
+          <Link to="/exam-sessions">Phiên thi</Link>
           {['ADMIN', 'LECTURER'].includes(user.role) && (
             <Link to="/question-banks">Ngân hàng câu hỏi</Link>
           )}
@@ -48,7 +51,11 @@ export default function SessionLayout({
             {roleLabels[user.role] ?? user.role}
           </span>
           <span className="auth-workspace__email">{user.email}</span>
-          <button type="button" onClick={handleLogout} disabled={loggingOut}>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut || busy}
+          >
             {loggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}
           </button>
         </div>

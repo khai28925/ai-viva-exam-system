@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApi();
-builder.Services.AddApiAuth(builder.Environment);
+builder.Services.AddApiAuth(builder.Environment, builder.Configuration);
 
 var app = builder.Build();
 
@@ -55,6 +55,7 @@ api.MapHealthEndpoints();
 api.MapAuthEndpoints();
 api.MapAdminUserEndpoints();
 api.MapExamEndpoints();
+api.MapExamSessionEndpoints();
 api.MapQuestionBankEndpoints();
 
 app.Run();

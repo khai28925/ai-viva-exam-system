@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import RoleDashboard from './pages/RoleDashboard.jsx'
 import QuestionBankPage from './features/question-bank/QuestionBankPage.jsx'
+import ExamSessionPage from './features/exam-session/ExamSessionPage.jsx'
 
 export default function App() {
   return (
@@ -17,6 +18,14 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/about" element={<HomePage />} />
         <Route path="/forbidden" element={<ForbiddenPage />} />
+        <Route
+          path="/exam-sessions"
+          element={
+            <RequireRole allowed={['LECTURER', 'ADMIN', 'STUDENT']}>
+              <ExamSessionPage />
+            </RequireRole>
+          }
+        />
         <Route
           path="/question-banks"
           element={

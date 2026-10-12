@@ -89,6 +89,11 @@ public static class QuestionBankEndpoints
                     statusCode: StatusCodes.Status409Conflict,
                     title: "Conflict",
                     detail: "Cannot delete a question bank that still contains questions."),
+                QuestionBankDeleteResult.HasExamSessions => Results.Problem(
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Conflict",
+                    detail: "Cannot delete a question bank referenced by an exam session.",
+                    extensions: new Dictionary<string, object?> { ["code"] = "bank_has_exam_sessions" }),
                 _ => Results.Problem(
                     statusCode: StatusCodes.Status404NotFound,
                     title: "Not Found",

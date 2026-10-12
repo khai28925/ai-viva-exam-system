@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router'
 import { useAuth } from './authContext.js'
 import { SessionStatus } from './RequireRole.jsx'
@@ -12,6 +12,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
+  const [retryUntil, setRetryUntil] = useState(null)
+  const [retrySeconds, setRetrySeconds] = useState(0)
+  const submitting = useRef(false)
+
+  useEffect(() => {
+    if (retryUntil === null) return
+    const timer = window.setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((retryUntil - Date.now()) / 1000))
+      setRetrySeconds(remaining)
+      if (remaining === 0) setRetryUntil(null)
+    }, 250)
+    return () => window.clearInterval(timer)
+  }, [retryUntil])
 
   if (status === 'loading' || status === 'error') return <SessionStatus />
   if (status === 'authenticated') {
@@ -32,20 +45,33 @@ export default function LoginPage() {
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (submitting.current || (retryUntil !== null && Date.now() < retryUntil))
+      return
+    submitting.current = true
     setError('')
     setPending(true)
     try {
       await login({ email: email.trim(), password })
     } catch (requestError) {
-      setError(
-        requestError.status === 401
-          ? 'Email hoặc mật khẩu không đúng.'
-          : requestError.status === 429
-            ? 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau.'
+      if (requestError.status === 429) {
+        const suggestedWait = Number(requestError.problem?.retryAfterSeconds)
+        const seconds =
+          Number.isFinite(suggestedWait) && suggestedWait > 0
+            ? Math.ceil(Math.min(suggestedWait, 3600))
+            : 60
+        setRetryUntil(Date.now() + seconds * 1000)
+        setRetrySeconds(seconds)
+        setError('Đã hết thời gian chờ. Bạn có thể thử đăng nhập lại.')
+      } else {
+        setError(
+          requestError.status === 401
+            ? 'Email hoặc mật khẩu không đúng.'
             : (requestError.problem?.detail ??
-              'Không thể đăng nhập lúc này. Vui lòng thử lại.'),
-      )
+                'Không thể đăng nhập lúc này. Vui lòng thử lại.'),
+        )
+      }
     } finally {
+      submitting.current = false
       setPending(false)
     }
   }
@@ -116,11 +142,17 @@ export default function LoginPage() {
             />
             {error && (
               <p className="auth-form-error" role="alert">
-                {error}
+                {retrySeconds > 0
+                  ? `Bạn đã thử đăng nhập quá nhiều lần. Vui lòng chờ ${retrySeconds} giây rồi thử lại.`
+                  : error}
               </p>
             )}
-            <button type="submit" disabled={pending}>
-              {pending ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            <button type="submit" disabled={pending || retrySeconds > 0}>
+              {pending
+                ? 'Đang đăng nhập...'
+                : retrySeconds > 0
+                  ? `Thử lại sau ${retrySeconds}s`
+                  : 'Đăng nhập'}
               <span aria-hidden="true">↗</span>
             </button>
           </form>

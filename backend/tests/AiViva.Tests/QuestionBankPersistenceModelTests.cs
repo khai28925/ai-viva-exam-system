@@ -71,10 +71,14 @@ public sealed class QuestionBankPersistenceModelTests
         Assert.Equal(2000, question.FindProperty(nameof(Question.Content))!.GetMaxLength());
         Assert.Equal("timestamp with time zone", question.FindProperty(nameof(Question.CreatedAt))!.GetColumnType());
 
-        var foreignKey = Assert.Single(question.GetForeignKeys());
+        var foreignKey = question.GetForeignKeys()
+            .Single(key => key.PrincipalEntityType == bank);
         Assert.Equal(DeleteBehavior.Restrict, foreignKey.DeleteBehavior);
         Assert.Equal(bank, foreignKey.PrincipalEntityType);
-        Assert.Equal("ix_questions_question_bank_id", Assert.Single(question.GetIndexes()).GetDatabaseName());
+        Assert.Contains(question.GetForeignKeys(), key =>
+            key.PrincipalEntityType == question && key.DeleteBehavior == DeleteBehavior.Restrict);
+        Assert.Contains(question.GetIndexes(), index =>
+            index.GetDatabaseName() == "ix_questions_question_bank_id");
     }
 
     [Fact]

@@ -12,12 +12,14 @@ public sealed class UserAccountConfiguration : IEntityTypeConfiguration<UserAcco
         builder.HasKey(user => user.Id);
         builder.Property(user => user.Id).HasColumnName("id").HasColumnType("uuid").ValueGeneratedNever();
         builder.Property(user => user.Email).HasColumnName("email").HasMaxLength(254).IsRequired();
+        builder.Property(user => user.FullName).HasColumnName("full_name").HasMaxLength(160);
         builder.Property(user => user.NormalizedEmail).HasColumnName("normalized_email").HasMaxLength(254).IsRequired();
         builder.HasIndex(user => user.NormalizedEmail).IsUnique();
         builder.Property(user => user.PasswordHash).HasColumnName("password_hash").HasMaxLength(512).IsRequired();
         builder.Property(user => user.RoleId).HasColumnName("role_id").HasColumnType("uuid").IsRequired();
         builder.Property(user => user.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(user => user.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone").IsRequired();
+        builder.Property(user => user.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamp with time zone");
         builder.HasOne(user => user.Role)
             .WithMany()
             .HasForeignKey(user => user.RoleId)

@@ -1,5 +1,6 @@
 using AiViva.Application.Abstractions;
 using AiViva.Application.Accounts;
+using AiViva.Application.ExamSessions;
 using AiViva.Domain.Entities;
 using AiViva.Infrastructure.Accounts;
 using AiViva.Infrastructure.Persistence;
@@ -27,6 +28,7 @@ public static class DependencyInjection
         services.AddDbContext<QuestionBankDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IQuestionBankRepository, PostgresQuestionBankRepository>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IExamSessionService, PostgresExamSessionService>();
         services.AddScoped<IPasswordHasher<UserAccount>, PasswordHasher<UserAccount>>();
         return services;
     }
