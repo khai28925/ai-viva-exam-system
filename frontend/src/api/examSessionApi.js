@@ -17,3 +17,7 @@ export const deleteExamSession = (id, signal) =>
   del(sessionPath(id), { signal })
 export const joinExamSession = (id, signal) =>
   post(`${sessionPath(id)}/join`, undefined, { signal })
+export const getExamSessionQuestions = (id, signal) =>
+  get(`${sessionPath(id)}/questions`, { signal })
+export const replaceExamSessionQuestions = (id, questionIds, signal) =>
+  put(`${sessionPath(id)}/questions`, { questionIds }, { signal })

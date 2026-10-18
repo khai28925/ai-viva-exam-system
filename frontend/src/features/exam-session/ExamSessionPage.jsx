@@ -4,6 +4,7 @@ import * as api from '../../api/examSessionApi.js'
 import { getQuestionBanks } from '../../api/questionBankApi.js'
 import { useAuth } from '../auth/authContext.js'
 import SessionLayout from '../auth/SessionLayout.jsx'
+import SessionPreparationPanel from './SessionPreparationPanel.jsx'
 import './examSession.css'
 
 const statusLabels = { Draft: 'Bản nháp', Open: 'Đang mở', Closed: 'Đã đóng' }
@@ -11,10 +12,16 @@ const statusLabels = { Draft: 'Bản nháp', Open: 'Đang mở', Closed: 'Đã �
 function errorMessage(error, action) {
   if (error.status === 409) {
     if (action === 'delete')
-      return 'Phiên đã có sinh viên tham gia nên không thể xóa. Bạn có thể đóng phiên.'
+      return 'Chỉ có thể xóa phiên Draft chưa có sinh viên tham gia.'
     if (action === 'join')
-      return 'Phiên đã đóng hoặc không còn câu hỏi. Hãy tải lại danh sách.'
-    return 'Không thể lưu: phiên đang mở phải có câu hỏi; phiên đã có người tham gia không được đổi ngân hàng. Hãy tải lại để kiểm tra.'
+      return (
+        error.problem?.detail ||
+        'Phiên không còn mở hoặc chưa được chuẩn bị. Hãy tải lại danh sách.'
+      )
+    return (
+      error.problem?.detail ||
+      'Không thể lưu thay đổi. Hãy tải lại để kiểm tra.'
+    )
   }
   if (error.status === 404)
     return 'Phiên thi hoặc ngân hàng không còn tồn tại. Hãy tải lại danh sách.'
@@ -36,9 +43,7 @@ function SessionForm({ session, banks, pending, error, onSave, onCancel }) {
   const [bankId, setBankId] = useState(
     session?.questionBankId ?? banks[0]?.id ?? '',
   )
-  const [status, setStatus] = useState(session?.status ?? 'Draft')
   const [validation, setValidation] = useState('')
-  const bankLocked = (session?.participantCount ?? 0) > 0
 
   function submit(event) {
     event.preventDefault()
@@ -52,7 +57,7 @@ function SessionForm({ session, banks, pending, error, onSave, onCancel }) {
       return
     }
     setValidation('')
-    onSave({ title: title.trim(), questionBankId: bankId, status })
+    onSave({ title: title.trim(), questionBankId: bankId, status: 'Draft' })
   }
 
   return (
@@ -75,7 +80,6 @@ function SessionForm({ session, banks, pending, error, onSave, onCancel }) {
             id="exam-bank"
             value={bankId}
             required
-            disabled={bankLocked}
             onChange={(event) => setBankId(event.target.value)}
           >
             <option value="">Chọn ngân hàng</option>
@@ -85,24 +89,9 @@ function SessionForm({ session, banks, pending, error, onSave, onCancel }) {
               </option>
             ))}
           </select>
-          {bankLocked && (
-            <p>Đã có sinh viên tham gia: không thể đổi ngân hàng câu hỏi.</p>
-          )}
-          <label htmlFor="exam-status">Trạng thái</label>
-          <select
-            id="exam-status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-          >
-            {Object.entries(statusLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
           <p>
-            Chọn “Đang mở” để sinh viên thấy nút Vào thi. Ngân hàng phải có ít
-            nhất một câu hỏi.
+            Phiên mới bắt đầu ở trạng thái Draft. Hãy chọn câu hỏi, thêm ý chính
+            và rubric rồi mở phiên. Không thể đổi ngân hàng khi đã chọn câu hỏi.
           </p>
           {(validation || error) && (
             <p className="auth-form-error" role="alert">
@@ -147,7 +136,7 @@ function DeleteConfirmation({ session, pending, error, onConfirm, onCancel }) {
     >
       <h2 id="exam-delete-title">Xóa phiên thi?</h2>
       <p>Bạn muốn xóa “{session.title}”? Thao tác này không thể hoàn tác.</p>
-      <p>Phiên đã có sinh viên tham gia sẽ không được xóa.</p>
+      <p>Chỉ phiên Draft chưa có sinh viên tham gia mới được xóa.</p>
       {error && (
         <p role="alert" className="auth-form-error">
           {error}
@@ -190,6 +179,7 @@ export default function ExamSessionPage() {
   const [form, setForm] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [attempt, setAttempt] = useState(null)
+  const [preparingId, setPreparingId] = useState(null)
   const requests = useRef(null)
   const busy = useRef(false)
 
@@ -229,6 +219,7 @@ export default function ExamSessionPage() {
     setForm(null)
     setDeleting(null)
     setAttempt(null)
+    setPreparingId(null)
     setActionError('')
     setLoadError('')
     setNotice('')
@@ -282,7 +273,7 @@ export default function ExamSessionPage() {
       eyebrow="EXAM SESSIONS / BẢN CƠ BẢN"
       description={
         teacher
-          ? 'Tạo phiên từ ngân hàng câu hỏi, mở cho sinh viên tham gia và đóng khi kết thúc.'
+          ? 'Tạo phiên Draft, chọn câu hỏi và kiểm tra điều kiện trước khi mở cho sinh viên.'
           : 'Chọn một phiên đang mở để vào xem câu hỏi.'
       }
       busy={pending}
@@ -421,7 +412,9 @@ export default function ExamSessionPage() {
                             <button
                               className="exam-button"
                               type="button"
-                              disabled={pending || !!form}
+                              disabled={
+                                pending || !!form || session.status !== 'Draft'
+                              }
                               onClick={() => {
                                 setForm({ session })
                                 setActionError('')
@@ -434,7 +427,9 @@ export default function ExamSessionPage() {
                             <button
                               className="exam-button exam-button--danger"
                               type="button"
-                              disabled={pending || !!form}
+                              disabled={
+                                pending || !!form || session.status !== 'Draft'
+                              }
                               onClick={() => {
                                 setDeleting(session)
                                 setActionError('')
@@ -444,6 +439,51 @@ export default function ExamSessionPage() {
                             >
                               Xóa
                             </button>
+                            <button
+                              className="exam-button"
+                              type="button"
+                              disabled={pending || !!form}
+                              onClick={() =>
+                                setPreparingId((current) =>
+                                  current === session.id ? null : session.id,
+                                )
+                              }
+                            >
+                              {preparingId === session.id
+                                ? 'Ẩn chuẩn bị đề'
+                                : 'Chuẩn bị đề'}
+                            </button>
+                            {session.status === 'Open' && (
+                              <button
+                                className="exam-button"
+                                type="button"
+                                disabled={pending}
+                                onClick={() =>
+                                  mutate(
+                                    'close',
+                                    (signal) =>
+                                      api.updateExamSession(
+                                        session.id,
+                                        {
+                                          title: session.title,
+                                          questionBankId:
+                                            session.questionBankId,
+                                          status: 'Closed',
+                                        },
+                                        signal,
+                                      ),
+                                    (result) =>
+                                      setSessions((current) =>
+                                        current.map((item) =>
+                                          item.id === result.id ? result : item,
+                                        ),
+                                      ),
+                                  )
+                                }
+                              >
+                                Đóng phiên
+                              </button>
+                            )}
                           </>
                         ) : (
                           <button
@@ -467,6 +507,21 @@ export default function ExamSessionPage() {
                           </button>
                         )}
                       </div>
+                      {teacher && preparingId === session.id && (
+                        <SessionPreparationPanel
+                          key={session.id}
+                          session={session}
+                          onAccessError={handleAccessError}
+                          onPublished={(result) => {
+                            setSessions((current) =>
+                              current.map((item) =>
+                                item.id === result.id ? result : item,
+                              ),
+                            )
+                            setNotice('Phiên đã mở cho sinh viên.')
+                          }}
+                        />
+                      )}
                     </article>
                   ))}
                 </div>

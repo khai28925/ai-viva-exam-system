@@ -94,6 +94,11 @@ public static class QuestionBankEndpoints
                     title: "Conflict",
                     detail: "Cannot delete a question bank referenced by an exam session.",
                     extensions: new Dictionary<string, object?> { ["code"] = "bank_has_exam_sessions" }),
+                QuestionBankDeleteResult.HasRubric => Results.Problem(
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Conflict",
+                    detail: "Delete the rubric before deleting this question bank.",
+                    extensions: new Dictionary<string, object?> { ["code"] = "bank_has_rubric" }),
                 _ => Results.Problem(
                     statusCode: StatusCodes.Status404NotFound,
                     title: "Not Found",
@@ -191,7 +196,19 @@ public static class QuestionBankEndpoints
             IQuestionService service,
             CancellationToken ct) =>
         {
-            var deleted = await service.DeleteAsync(bankId, questionId, ct);
+            bool deleted;
+            try
+            {
+                deleted = await service.DeleteAsync(bankId, questionId, ct);
+            }
+            catch (QuestionDeleteConflictException exception)
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Conflict",
+                    detail: exception.Message,
+                    extensions: new Dictionary<string, object?> { ["code"] = exception.Code });
+            }
             return deleted
                 ? Results.NoContent()
                 : Results.Problem(
@@ -202,7 +219,8 @@ public static class QuestionBankEndpoints
         .WithName("DeleteQuestion")
         .WithSummary("Delete a question within a question bank.")
         .Produces(StatusCodes.Status204NoContent)
-        .ProducesProblem(StatusCodes.Status404NotFound);
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
     }

@@ -501,6 +501,7 @@ export default function QuestionBankWorkspace({
   onCreateBank,
   onUpdateBank,
   onDeleteBank,
+  preparation,
   dataSourceLabel = 'Dữ liệu minh họa',
   accountLabel = 'Giảng viên',
   accountDetail = 'Bản xem trước UI',
@@ -866,6 +867,7 @@ export default function QuestionBankWorkspace({
               </section>
             </div>
           )}
+          {preparation?.({ bank: selectedBank, questions: bankQuestions })}
           <footer className="qb-footer">
             <span>© 2026 AIVES · AI-powered Viva Exam System</span>
             <span>

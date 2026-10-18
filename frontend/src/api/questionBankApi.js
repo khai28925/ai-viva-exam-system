@@ -34,6 +34,41 @@ export const updateQuestion = (bankId, questionId, request, signal) =>
 export const deleteQuestion = (bankId, questionId, signal) =>
   del(questionPath(bankId, questionId), { signal })
 
+const keyPointsPath = (bankId, questionId) =>
+  `${questionPath(bankId, questionId)}/expected-key-points`
+const rubricPath = (bankId) => `${bankPath(bankId)}/rubric`
+const criteriaPath = (bankId) => `${rubricPath(bankId)}/criteria`
+
+export const getExpectedKeyPoints = (bankId, questionId, signal) =>
+  get(keyPointsPath(bankId, questionId), { signal })
+export const createExpectedKeyPoint = (bankId, questionId, request, signal) =>
+  post(keyPointsPath(bankId, questionId), request, { signal })
+export const updateExpectedKeyPoint = (
+  bankId,
+  questionId,
+  pointId,
+  request,
+  signal,
+) => put(`${keyPointsPath(bankId, questionId)}/${pointId}`, request, { signal })
+export const deleteExpectedKeyPoint = (bankId, questionId, pointId, signal) =>
+  del(`${keyPointsPath(bankId, questionId)}/${pointId}`, { signal })
+
+export const getRubric = (bankId, signal) => get(rubricPath(bankId), { signal })
+export const createRubric = (bankId, request, signal) =>
+  post(rubricPath(bankId), request, { signal })
+export const updateRubric = (bankId, request, signal) =>
+  put(rubricPath(bankId), request, { signal })
+export const deleteRubric = (bankId, signal) =>
+  del(rubricPath(bankId), { signal })
+export const getRubricCriteria = (bankId, signal) =>
+  get(criteriaPath(bankId), { signal })
+export const createRubricCriterion = (bankId, request, signal) =>
+  post(criteriaPath(bankId), request, { signal })
+export const updateRubricCriterion = (bankId, criterionId, request, signal) =>
+  put(`${criteriaPath(bankId)}/${criterionId}`, request, { signal })
+export const deleteRubricCriterion = (bankId, criterionId, signal) =>
+  del(`${criteriaPath(bankId)}/${criterionId}`, { signal })
+
 // The MVP has no pagination/count endpoint: load the nested collections in parallel.
 // A failed request fails the whole load, never displaying an incomplete count as zero.
 export async function getQuestionBankWorkspace(signal) {
