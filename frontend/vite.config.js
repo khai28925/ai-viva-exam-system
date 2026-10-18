@@ -11,6 +11,9 @@ export default defineConfig({
         questionBankPreview: fileURLToPath(
           new URL('./question-bank-preview.html', import.meta.url),
         ),
+        wf1PreparationPreview: fileURLToPath(
+          new URL('./wf1-preparation-preview.html', import.meta.url),
+        ),
       },
     },
   },
