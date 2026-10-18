@@ -1,51 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using AiViva.Application.Abstractions;
-using AiViva.Application.QuestionBanks;
-using AiViva.Application.Questions;
-using AiViva.Domain.Entities;
 
-namespace AiViva.Application.ExpectedKeyPoints
+namespace AiViva.Application.ExpectedKeyPoints;
+
+internal sealed class ExpectedKeyPointsService(IExpectedKeyPoints repository) : IExpectedKeyPointsService
 {
-    internal class ExpectedKeyPointsService(IExpectedKeyPoints expectedKeyPointsRepos) : IExpectedKeyPointsService
-    {
-        
-        private static ExpectedKeyPointsDto? ToDto(ExpectedKeyPoint entity)
-        {
-            if (entity == null) return null;
-            return new ExpectedKeyPointsDto(
-                Id = entity.Id,
-                QuestionId = entity.QuestionId,
-                Content = entity.Content,
-                DisplayOrder = entity.DisplayOrder,
-                CreatedAt = entity.CreatedAt);
+    public Task<ExpectedKeyPointsResult<IReadOnlyCollection<ExpectedKeyPointsDto>>> GetByQuestionIdAsync(
+        Guid bankId, Guid questionId, CancellationToken ct = default) =>
+        repository.GetByQuestionIdAsync(bankId, questionId, ct);
 
-        }
+    public Task<ExpectedKeyPointsResult<ExpectedKeyPointsDto>> GetByIdAsync(
+        Guid bankId, Guid questionId, Guid keyPointId, CancellationToken ct = default) =>
+        repository.GetByIdAsync(bankId, questionId, keyPointId, ct);
 
-        public async Task<ExpectedKeyPointsDto?> CreateAsync(CreateExpectedKeyPointsRequest request, CancellationToken ct = default)
-        {
-            return ToDto(expectedKeyPointsRepos.CreateAsync(request, ct).Result);
-        }
+    public Task<ExpectedKeyPointsResult<ExpectedKeyPointsDto>> CreateAsync(
+        Guid bankId, Guid questionId, CreateExpectedKeyPointsRequest request, CancellationToken ct = default) =>
+        repository.CreateAsync(bankId, questionId, request, ct);
 
-        public async Task<bool> DeleteAsync(Guid keyPointId, CancellationToken ct = default)
-        {
-            return expectedKeyPointsRepos.DeleteAsync(keyPointId, ct).Result;
-        }
+    public Task<ExpectedKeyPointsResult<ExpectedKeyPointsDto>> UpdateAsync(
+        Guid bankId, Guid questionId, Guid keyPointId, UpdateExpectedKeyPointsRequest request, CancellationToken ct = default) =>
+        repository.UpdateAsync(bankId, questionId, keyPointId, request, ct);
 
-        public async Task<ExpectedKeyPointsDto?> GetByIdAsync(Guid keyPointId, CancellationToken ct = default)
-        {
-           return ToDto(expectedKeyPointsRepos.GetByIdAsync(keyPointId, ct).Result);
-        }
-
-        public async Task<IReadOnlyCollection<ExpectedKeyPointsDto>?> GetByQuestionIdAsync(Guid questionId, CancellationToken ct = default)
-        {
-            return expectedKeyPointsRepos.GetByQuestionIdAsync(questionId, ct).Result;
-        }
-
-        public async Task<ExpectedKeyPointsDto?> UpdateAsync(Guid keyPointId, UpdateExpectedKeyPointsRequest request, CancellationToken ct = default)
-        {
-            throw expectedKeyPointsRepos.UpdateAsync(keyPointId, request, ct);
-        }
-    }
+    public Task<ExpectedKeyPointsResult<bool>> DeleteAsync(
+        Guid bankId, Guid questionId, Guid keyPointId, CancellationToken ct = default) =>
+        repository.DeleteAsync(bankId, questionId, keyPointId, ct);
 }

@@ -1,18 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using AiViva.Application.ExpectedKeyPoints;
-using AiViva.Application.Questions;
-using AiViva.Domain.Entities;
 
-namespace AiViva.Application.Abstractions
+namespace AiViva.Application.Abstractions;
+
+public interface IExpectedKeyPoints
 {
-    public interface IExpectedKeyPoints
-    {
-        Task<IReadOnlyCollection<ExpectedKeyPoint>?> GetByQuestionIdAsync(Guid questionId, CancellationToken ct = default);
-        Task<ExpectedKeyPoint> GetByIdAsync(Guid keyPointsId, CancellationToken ct = default);
-        Task<ExpectedKeyPoint> CreateAsync(CreateExpectedKeyPointsRequest request, CancellationToken ct = default);
-        Task<ExpectedKeyPoint> UpdateAsync(Guid keyPointsId, UpdateExpectedKeyPointsRequest request, CancellationToken ct = default);
-        Task<bool> DeleteAsync(Guid keyPointsId, CancellationToken ct = default);
-    }
+    Task<ExpectedKeyPointsResult<IReadOnlyCollection<ExpectedKeyPointsDto>>> GetByQuestionIdAsync(
+        Guid bankId, Guid questionId, CancellationToken ct = default);
+
+    Task<ExpectedKeyPointsResult<ExpectedKeyPointsDto>> GetByIdAsync(
+        Guid bankId, Guid questionId, Guid keyPointId, CancellationToken ct = default);
+
+    Task<ExpectedKeyPointsResult<ExpectedKeyPointsDto>> CreateAsync(
+        Guid bankId, Guid questionId, CreateExpectedKeyPointsRequest request, CancellationToken ct = default);
+
+    Task<ExpectedKeyPointsResult<ExpectedKeyPointsDto>> UpdateAsync(
+        Guid bankId, Guid questionId, Guid keyPointId, UpdateExpectedKeyPointsRequest request, CancellationToken ct = default);
+
+    Task<ExpectedKeyPointsResult<bool>> DeleteAsync(
+        Guid bankId, Guid questionId, Guid keyPointId, CancellationToken ct = default);
 }
