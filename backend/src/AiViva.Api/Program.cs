@@ -57,6 +57,8 @@ api.MapAdminUserEndpoints();
 api.MapExamEndpoints();
 api.MapExamSessionEndpoints();
 api.MapQuestionBankEndpoints();
+api.MapExpectedKeyEndpoints();
+api.MapRubricEndpoints();
 
 app.Run();
 
