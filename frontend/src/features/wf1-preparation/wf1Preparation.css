@@ -11,6 +11,54 @@
   font-family: 'DM Sans', sans-serif;
 }
 
+.wf-live {
+  --wf-ink: #183a34;
+  --wf-muted: #6d8179;
+  --wf-line: #e4e9e2;
+  --wf-orange: #c96d45;
+  color: var(--wf-ink);
+  margin: 24px 0;
+  font-family: 'DM Sans', sans-serif;
+}
+.wf-live button,
+.wf-live input,
+.wf-live textarea {
+  font: inherit;
+}
+.wf-live button {
+  cursor: pointer;
+}
+.wf-live button:disabled {
+  cursor: not-allowed;
+  opacity: 0.54;
+}
+.wf-live__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 390px), 1fr));
+  gap: 20px;
+}
+.wf-live__questions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.wf-live__questions button {
+  border: 1px solid var(--wf-line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: white;
+  color: var(--wf-ink);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf-live__questions button[aria-pressed='true'] {
+  border-color: var(--wf-orange);
+  background: #fff2e9;
+}
+
 .wf-app button,
 .wf-app input,
 .wf-app select,

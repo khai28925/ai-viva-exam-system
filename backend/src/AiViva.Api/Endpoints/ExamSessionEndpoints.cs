@@ -34,6 +34,19 @@ public static class ExamSessionEndpoints
             .WithName("UpdateExamSession")
             .Produces<ExamSessionDto>().ProducesValidationProblem().ProducesProblem(404).ProducesProblem(409);
 
+        sessions.MapGet("/{id:guid}/questions", async (Guid id, IExamSessionService service, ClaimsPrincipal principal, CancellationToken ct) =>
+            Respond(await service.GetQuestionsAsync(id, Actor(principal), ct), Results.Ok))
+            .RequireAuthorization(AuthPolicies.ExamSessionManage)
+            .WithName("GetExamSessionQuestions")
+            .Produces<IReadOnlyCollection<SelectedExamQuestionDto>>().ProducesProblem(404);
+
+        sessions.MapPut("/{id:guid}/questions", async (Guid id, SaveExamQuestionSelectionRequest request, IExamSessionService service, ClaimsPrincipal principal, CancellationToken ct) =>
+            Respond(await service.ReplaceQuestionsAsync(id, request, Actor(principal), ct), Results.Ok))
+            .RequireAuthorization(AuthPolicies.ExamSessionManage)
+            .WithName("ReplaceExamSessionQuestions")
+            .Produces<IReadOnlyCollection<SelectedExamQuestionDto>>().ProducesValidationProblem()
+            .ProducesProblem(404).ProducesProblem(409);
+
         sessions.MapDelete("/{id:guid}", async (Guid id, IExamSessionService service, ClaimsPrincipal principal, CancellationToken ct) =>
             Respond(await service.DeleteAsync(id, Actor(principal), ct), _ => Results.NoContent()))
             .RequireAuthorization(AuthPolicies.ExamSessionManage)
@@ -64,6 +77,13 @@ public static class ExamSessionEndpoints
             ExamSessionError.Conflict => (409, "Conflict"),
             _ => (500, "Internal Server Error")
         };
-        return Results.Problem(statusCode: status, title: title, detail: result.Detail);
+        if (result.Error == ExamSessionError.Invalid && result.ValidationErrors is not null)
+            return Results.ValidationProblem(result.ValidationErrors, statusCode: status, title: title);
+        var extensions = new Dictionary<string, object?>();
+        if (result.Code is not null) extensions["code"] = result.Code;
+        if (result.Missing is not null) extensions["missing"] = result.Missing;
+        if (result.QuestionIdsWithoutKeyPoints is not null)
+            extensions["questionIdsWithoutKeyPoints"] = result.QuestionIdsWithoutKeyPoints;
+        return Results.Problem(statusCode: status, title: title, detail: result.Detail, extensions: extensions);
     }
 }

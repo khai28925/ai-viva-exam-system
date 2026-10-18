@@ -73,6 +73,11 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db) : I
             return QuestionBankDeleteResult.HasExamSessions;
         }
 
+        if (await db.Rubrics.AnyAsync(rubric => rubric.QuestionBankId == id, cancellationToken))
+        {
+            return QuestionBankDeleteResult.HasRubric;
+        }
+
         try
         {
             var deleted = await db.QuestionBanks
@@ -82,9 +87,10 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db) : I
         }
         catch (PostgresException exception) when (exception.SqlState == PostgresErrorCodes.ForeignKeyViolation)
         {
-            return exception.ConstraintName?.Contains("exam_sessions", StringComparison.Ordinal) == true
-                ? QuestionBankDeleteResult.HasExamSessions
-                : QuestionBankDeleteResult.HasQuestions;
+            if (exception.ConstraintName?.Contains("exam_sessions", StringComparison.Ordinal) == true)
+                return QuestionBankDeleteResult.HasExamSessions;
+            return exception.ConstraintName?.Contains("rubrics", StringComparison.Ordinal) == true
+                ? QuestionBankDeleteResult.HasRubric : QuestionBankDeleteResult.HasQuestions;
         }
     }
 
@@ -157,9 +163,20 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db) : I
         Guid questionId,
         CancellationToken cancellationToken = default)
     {
-        var deleted = await db.Questions
-            .Where(question => question.Id == questionId && question.QuestionBankId == questionBankId)
-            .ExecuteDeleteAsync(cancellationToken);
-        return deleted > 0;
+        if (await db.ExamSessionQuestions.AnyAsync(item => item.QuestionId == questionId, cancellationToken))
+            throw new QuestionDeleteConflictException("question_selected_for_session");
+        if (await db.ExpectedKeyPoints.AnyAsync(item => item.QuestionId == questionId, cancellationToken))
+            throw new QuestionDeleteConflictException("question_has_key_points");
+        try
+        {
+            var deleted = await db.Questions
+                .Where(question => question.Id == questionId && question.QuestionBankId == questionBankId)
+                .ExecuteDeleteAsync(cancellationToken);
+            return deleted > 0;
+        }
+        catch (PostgresException exception) when (exception.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+        {
+            throw new QuestionDeleteConflictException("question_referenced");
+        }
     }
 }

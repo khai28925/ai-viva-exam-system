@@ -9,6 +9,10 @@ public sealed record ExamSessionDto(
 
 public sealed record ExamQuestionDto(Guid Id, string Content);
 
+public sealed record SelectedExamQuestionDto(Guid QuestionId, string ContentSnapshot, int DisplayOrder, bool IsRequired);
+
+public sealed record SaveExamQuestionSelectionRequest(IReadOnlyList<Guid>? QuestionIds);
+
 public sealed record ExamAttemptDto(
     Guid Id, Guid ExamSessionId, Guid StudentId, DateTimeOffset StartedAt,
     IReadOnlyCollection<ExamQuestionDto> Questions);
@@ -48,7 +52,17 @@ public sealed record ExamActor(Guid Id, string Role)
 
 public enum ExamSessionError { None, Invalid, NotFound, Forbidden, Conflict }
 
-public sealed record ExamSessionResult<T>(T? Value, ExamSessionError Error = ExamSessionError.None, string? Detail = null)
+public sealed record ExamSessionResult<T>(
+    T? Value, ExamSessionError Error = ExamSessionError.None, string? Detail = null,
+    string? Code = null, IReadOnlyCollection<string>? Missing = null,
+    IReadOnlyCollection<Guid>? QuestionIdsWithoutKeyPoints = null,
+    IDictionary<string, string[]>? ValidationErrors = null)
 {
-    public static ExamSessionResult<T> Fail(ExamSessionError error, string detail) => new(default, error, detail);
+    public static ExamSessionResult<T> Fail(
+        ExamSessionError error, string detail, string? code = null,
+        IReadOnlyCollection<string>? missing = null, IReadOnlyCollection<Guid>? questionIdsWithoutKeyPoints = null) =>
+        new(default, error, detail, code, missing, questionIdsWithoutKeyPoints);
+
+    public static ExamSessionResult<T> Invalid(string field, string detail) =>
+        new(default, ExamSessionError.Invalid, detail, ValidationErrors: new Dictionary<string, string[]> { [field] = [detail] });
 }

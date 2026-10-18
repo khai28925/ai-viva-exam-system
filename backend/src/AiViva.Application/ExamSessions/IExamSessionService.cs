@@ -6,6 +6,8 @@ public interface IExamSessionService
     Task<ExamSessionResult<ExamSessionDto>> GetByIdAsync(Guid id, ExamActor actor, CancellationToken ct = default);
     Task<ExamSessionResult<ExamSessionDto>> CreateAsync(SaveExamSessionRequest request, ExamActor actor, CancellationToken ct = default);
     Task<ExamSessionResult<ExamSessionDto>> UpdateAsync(Guid id, SaveExamSessionRequest request, ExamActor actor, CancellationToken ct = default);
+    Task<ExamSessionResult<IReadOnlyCollection<SelectedExamQuestionDto>>> GetQuestionsAsync(Guid id, ExamActor actor, CancellationToken ct = default);
+    Task<ExamSessionResult<IReadOnlyCollection<SelectedExamQuestionDto>>> ReplaceQuestionsAsync(Guid id, SaveExamQuestionSelectionRequest request, ExamActor actor, CancellationToken ct = default);
     Task<ExamSessionResult<bool>> DeleteAsync(Guid id, ExamActor actor, CancellationToken ct = default);
     Task<ExamSessionResult<ExamAttemptDto>> JoinAsync(Guid id, ExamActor actor, CancellationToken ct = default);
 }
