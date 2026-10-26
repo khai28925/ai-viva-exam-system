@@ -1,5 +1,6 @@
 using AiViva.Application.ExamSessions;
 using AiViva.Domain.Entities;
+using AiViva.Infrastructure.Modules.QuestionPreparation;
 using AiViva.Infrastructure.Persistence;
 using AiViva.Infrastructure.Persistence.Models;
 using FluentAssertions;
@@ -39,7 +40,7 @@ public sealed class ExamSessionWorkflowTests : IAsyncDisposable
         _bankId = bank.Id;
         _lecturer = new ExamActor(lecturer.Id, Role.Codes.Lecturer);
         _student = new ExamActor(student.Id, Role.Codes.Student);
-        _service = new PostgresExamSessionService(_db);
+        _service = new PostgresExamSessionService(_db, new PostgresQuestionPreparationReader(_db));
     }
 
     public async ValueTask DisposeAsync()

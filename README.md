@@ -6,7 +6,7 @@ Hệ thống thi vấn đáp có hỗ trợ AI cho Entrepreneurship Experience P
 
 - **Frontend:** React 19, Vite 8
 - **Backend:** ASP.NET Core 10 Web API
-- **Kiến trúc backend:** Modular monolith, tách Domain/Application/Infrastructure/API
+- **Kiến trúc backend:** Một API modular monolith với các module Identity, QuestionPreparation, Viva và LegacyExams; các module dùng chung các lớp Domain/Application/Infrastructure và trao đổi qua `AiViva.ModuleContracts`
 - **Database:** PostgreSQL (Question Bank và tài khoản trên nhánh tích hợp)
 - **Dịch vụ ngoài dự kiến:** Speech-to-Text, LLM, Text-to-Speech
 
@@ -19,7 +19,8 @@ Hệ thống thi vấn đáp có hỗ trợ AI cho Entrepreneurship Experience P
 │   │   ├── AiViva.Api/
 │   │   ├── AiViva.Application/
 │   │   ├── AiViva.Domain/
-│   │   └── AiViva.Infrastructure/
+│   │   ├── AiViva.Infrastructure/
+│   │   └── AiViva.ModuleContracts/
 │   └── AiVivaExamSystem.sln
 ├── frontend/
 │   ├── src/

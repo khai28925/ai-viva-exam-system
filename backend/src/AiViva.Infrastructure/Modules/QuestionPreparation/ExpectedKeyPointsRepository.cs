@@ -3,12 +3,13 @@ using AiViva.Application.Abstractions;
 using AiViva.Application.ExpectedKeyPoints;
 using AiViva.Domain.Entities;
 using AiViva.Infrastructure.Persistence.Models;
+using AiViva.ModuleContracts.Viva;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace AiViva.Infrastructure.Persistence;
 
-internal sealed class ExpectedKeyPointsRepository(QuestionBankDbContext db) : IExpectedKeyPoints
+internal sealed class ExpectedKeyPointsRepository(QuestionBankDbContext db, IExamUsageReader examUsage) : IExpectedKeyPoints
 {
     private const int MaxWriteAttempts = 3;
 
@@ -211,10 +212,7 @@ internal sealed class ExpectedKeyPointsRepository(QuestionBankDbContext db) : IE
             question.Id == questionId && question.QuestionBankId == bankId && question.QuestionType == "Bank", ct);
 
     private Task<bool> IsQuestionLockedAsync(Guid questionId, CancellationToken ct) =>
-        db.ExamSessionQuestions.AnyAsync(selection =>
-            selection.QuestionId == questionId && db.ExamSessions.Any(session =>
-                session.Id == selection.ExamSessionId &&
-                (session.Status == ExamSession.Statuses.Open || session.Status == ExamSession.Statuses.Closed)), ct);
+        examUsage.QuestionIsUsedInPublishedSessionAsync(questionId, ct);
 
     private static bool IsRetryable(Exception exception) =>
         exception is PostgresException

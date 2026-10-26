@@ -1,6 +1,16 @@
+using AiViva.Application;
+using AiViva.Application.Accounts;
+using AiViva.Application.Exams;
+using AiViva.Application.ExamSessions;
+using AiViva.Application.ExpectedKeyPoints;
+using AiViva.Application.QuestionBanks;
+using AiViva.Application.Questions;
+using AiViva.Application.Rubrics;
 using AiViva.Domain.Entities;
 using AiViva.Infrastructure;
 using AiViva.Infrastructure.Persistence;
+using AiViva.ModuleContracts.QuestionPreparation;
+using AiViva.ModuleContracts.Viva;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -50,6 +60,33 @@ public sealed class QuestionBankPersistenceModelTests
 
         Assert.IsType<PostgresQuestionBankRepository>(repository);
         Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", db.Database.ProviderName);
+    }
+
+    [Fact]
+    public void BackendModulesResolveFromOneScope()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationManager
+        {
+            ["ConnectionStrings:QuestionBank"] = "Host=localhost;Database=aives;Username=aives"
+        };
+
+        services.AddApplication();
+        services.AddInfrastructure(configuration);
+
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+        using var scope = provider.CreateScope();
+        var scopedServices = scope.ServiceProvider;
+
+        Assert.NotNull(scopedServices.GetRequiredService<IAccountService>());
+        Assert.NotNull(scopedServices.GetRequiredService<IQuestionBankService>());
+        Assert.NotNull(scopedServices.GetRequiredService<IQuestionService>());
+        Assert.NotNull(scopedServices.GetRequiredService<IExpectedKeyPointsService>());
+        Assert.NotNull(scopedServices.GetRequiredService<IRubricService>());
+        Assert.NotNull(scopedServices.GetRequiredService<IExamSessionService>());
+        Assert.NotNull(scopedServices.GetRequiredService<IExamService>());
+        Assert.NotNull(scopedServices.GetRequiredService<IQuestionPreparationReader>());
+        Assert.NotNull(scopedServices.GetRequiredService<IExamUsageReader>());
     }
 
     [Fact]

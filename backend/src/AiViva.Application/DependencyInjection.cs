@@ -1,7 +1,5 @@
-using AiViva.Application.Exams;
-using AiViva.Application.ExpectedKeyPoints;
-using AiViva.Application.QuestionBanks;
-using AiViva.Application.Questions;
+using AiViva.Application.Modules.LegacyExams;
+using AiViva.Application.Modules.QuestionPreparation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AiViva.Application;
@@ -10,10 +8,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddScoped<IExamService, ExamService>();
-        services.AddScoped<IQuestionBankService, QuestionBankService>();
-        services.AddScoped<IQuestionService, QuestionService>();
-        services.AddScoped<IExpectedKeyPointsService, ExpectedKeyPointsService>();
+        services.AddLegacyExamsApplication();
+        services.AddQuestionPreparationApplication();
         return services;
     }
 }

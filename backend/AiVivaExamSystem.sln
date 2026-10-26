@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiViva.Api", "src\AiViva.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiViva.Tests", "tests\AiViva.Tests\AiViva.Tests.csproj", "{E1A2B3C4-D5E6-F7A8-B9C0-D1E2F3A4B5C6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiViva.ModuleContracts", "src\AiViva.ModuleContracts\AiViva.ModuleContracts.csproj", "{9A4EA745-8863-4800-91B4-CFF1BA3EBD49}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{E1A2B3C4-D5E6-F7A8-B9C0-D1E2F3A4B5C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E1A2B3C4-D5E6-F7A8-B9C0-D1E2F3A4B5C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E1A2B3C4-D5E6-F7A8-B9C0-D1E2F3A4B5C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A4EA745-8863-4800-91B4-CFF1BA3EBD49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A4EA745-8863-4800-91B4-CFF1BA3EBD49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A4EA745-8863-4800-91B4-CFF1BA3EBD49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A4EA745-8863-4800-91B4-CFF1BA3EBD49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
 

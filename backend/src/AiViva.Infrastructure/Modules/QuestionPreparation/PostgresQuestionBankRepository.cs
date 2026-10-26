@@ -1,11 +1,12 @@
 using AiViva.Application.Abstractions;
 using AiViva.Domain.Entities;
+using AiViva.ModuleContracts.Viva;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace AiViva.Infrastructure.Persistence;
 
-public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db) : IQuestionBankRepository
+public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db, IExamUsageReader examUsage) : IQuestionBankRepository
 {
     public async Task<IReadOnlyCollection<QuestionBank>> GetAllAsync(
         CancellationToken cancellationToken = default)
@@ -68,7 +69,7 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db) : I
             return QuestionBankDeleteResult.HasQuestions;
         }
 
-        if (await db.ExamSessions.AnyAsync(session => session.QuestionBankId == id, cancellationToken))
+        if (await examUsage.BankHasAnySessionAsync(id, cancellationToken))
         {
             return QuestionBankDeleteResult.HasExamSessions;
         }
@@ -163,7 +164,7 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db) : I
         Guid questionId,
         CancellationToken cancellationToken = default)
     {
-        if (await db.ExamSessionQuestions.AnyAsync(item => item.QuestionId == questionId, cancellationToken))
+        if (await examUsage.QuestionIsSelectedAsync(questionId, cancellationToken))
             throw new QuestionDeleteConflictException("question_selected_for_session");
         if (await db.ExpectedKeyPoints.AnyAsync(item => item.QuestionId == questionId, cancellationToken))
             throw new QuestionDeleteConflictException("question_has_key_points");

@@ -1,10 +1,16 @@
 # Backend
 
-ASP.NET Core Web API theo hướng modular monolith với các project:
+ASP.NET Core Web API là một ứng dụng triển khai duy nhất, gồm các module
+Identity, QuestionPreparation, Viva và LegacyExams. Mỗi module có phần API,
+Application và Infrastructure; các module trao đổi qua `AiViva.ModuleContracts`.
+Xem [ranh giới và quy tắc phụ thuộc](ARCHITECTURE.md) trước khi thêm tính năng.
+
+Các project dùng chung cho các module:
 
 - `AiViva.Domain`: entity và business rule cốt lõi.
 - `AiViva.Application`: use case, DTO và abstraction.
 - `AiViva.Infrastructure`: persistence và tích hợp dịch vụ ngoài.
+- `AiViva.ModuleContracts`: contract đọc dữ liệu tối thiểu giữa các module.
 - `AiViva.Api`: HTTP endpoints, middleware và dependency injection.
 
 ## Chạy local
@@ -138,10 +144,11 @@ không được giữ lại. Script không dùng database demo đang có.
 
 ## Dependency injection
 
-Đăng ký use case/service tại `AiViva.Application/DependencyInjection.cs`
-(`AddApplication()`), repository và adapter tại
-`AiViva.Infrastructure/DependencyInjection.cs` (`AddInfrastructure()`).
-HTTP services, Swagger và Problem Details nằm trong `AddApi()`.
+`AddApplication()` và `AddInfrastructure()` gọi phần đăng ký của từng module.
+`QuestionBankDbContext` được đăng ký một lần cho cùng scope HTTP; các module
+không đọc trực tiếp bảng của nhau mà dùng contract trong
+`AiViva.ModuleContracts`. HTTP services, Swagger và Problem Details nằm trong
+`AddApi()`.
 
 SDK được chọn bởi `global.json` ở repository root. Khi API đang chạy, dừng bằng
 Ctrl+C trước khi build lại để tránh khóa DLL trên Windows.

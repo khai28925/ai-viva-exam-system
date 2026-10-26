@@ -1,5 +1,6 @@
 using AiViva.Application.Rubrics;
 using AiViva.Domain.Entities;
+using AiViva.Infrastructure.Modules.Viva;
 using AiViva.Infrastructure.Persistence;
 using AiViva.Infrastructure.Rubrics;
 using FluentAssertions;
@@ -40,7 +41,7 @@ public sealed class RubricServiceTests : IAsyncDisposable
         _bankId = bank.Id;
         _lecturerId = lecturer.Id;
 
-        _service = new PostgresRubricService(_db);
+        _service = new PostgresRubricService(_db, new PostgresExamUsageReader(_db));
     }
 
     public async ValueTask DisposeAsync()

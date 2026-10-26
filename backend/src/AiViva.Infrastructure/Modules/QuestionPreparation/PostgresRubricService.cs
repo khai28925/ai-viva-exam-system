@@ -2,12 +2,13 @@ using AiViva.Application.Rubrics;
 using AiViva.Domain.Entities;
 using AiViva.Infrastructure.Persistence;
 using AiViva.Infrastructure.Persistence.Models;
+using AiViva.ModuleContracts.Viva;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace AiViva.Infrastructure.Rubrics;
 
-public sealed class PostgresRubricService(QuestionBankDbContext db) : IRubricService
+public sealed class PostgresRubricService(QuestionBankDbContext db, IExamUsageReader examUsage) : IRubricService
 {
     public async Task<RubricServiceResult<RubricDto>> GetRubricAsync(Guid bankId, CancellationToken ct = default)
     {
@@ -341,10 +342,7 @@ public sealed class PostgresRubricService(QuestionBankDbContext db) : IRubricSer
         db.QuestionBanks.AnyAsync(b => b.Id == bankId, ct);
 
     private Task<bool> IsBankLockedAsync(Guid bankId, CancellationToken ct) =>
-        db.ExamSessions.AnyAsync(
-            s => s.QuestionBankId == bankId &&
-                 (s.Status == ExamSession.Statuses.Open || s.Status == ExamSession.Statuses.Closed),
-            ct);
+        examUsage.BankHasPublishedSessionAsync(bankId, ct);
 
     private static bool IsUniqueViolation(DbUpdateException exception) =>
         exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };

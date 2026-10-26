@@ -12,5 +12,6 @@
   <ItemGroup>
     <ProjectReference Include="..\AiViva.Application\AiViva.Application.csproj" />
     <ProjectReference Include="..\AiViva.Domain\AiViva.Domain.csproj" />
+    <ProjectReference Include="..\AiViva.ModuleContracts\AiViva.ModuleContracts.csproj" />
   </ItemGroup>
 </Project>

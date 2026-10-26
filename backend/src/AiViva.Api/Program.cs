@@ -1,5 +1,5 @@
-using AiViva.Api.Endpoints;
 using AiViva.Api.Extensions;
+using AiViva.Api.Modules;
 using AiViva.Application;
 using AiViva.Infrastructure;
 using AiViva.Infrastructure.Accounts;
@@ -51,14 +51,7 @@ app.UseApiAntiforgery();
 await AdminBootstrapper.SeedAsync(app.Services, app.Configuration);
 
 var api = app.MapGroup("/api");
-api.MapHealthEndpoints();
-api.MapAuthEndpoints();
-api.MapAdminUserEndpoints();
-api.MapExamEndpoints();
-api.MapExamSessionEndpoints();
-api.MapQuestionBankEndpoints();
-api.MapExpectedKeyEndpoints();
-api.MapRubricEndpoints();
+api.MapApiModules();
 
 app.Run();
 
