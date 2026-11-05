@@ -95,8 +95,8 @@ export default function LoginPage() {
             <em>Chung một mục tiêu.</em>
           </h1>
           <p>
-            Quản lý ngân hàng câu hỏi, tổ chức kỳ thi vấn đáp và theo dõi kết
-            quả trong một nền tảng thống nhất.
+            Quản lý bộ câu hỏi, tổ chức kỳ thi vấn đáp và theo dõi kết quả trong
+            một nền tảng thống nhất.
           </p>
         </div>
         <div className="auth-login__roles" aria-label="Các vai trò sử dụng">

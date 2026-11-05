@@ -11,7 +11,12 @@ const bankBody = ({ name, description }) => ({
   name: name.trim(),
   description: description?.trim() || null,
 })
-const questionBody = ({ content }) => ({ content: content.trim() })
+// Bloom/difficulty are optional: omitting them stores the question as unclassified.
+const questionBody = ({ content, bloomLevel, difficultyLevel }) => ({
+  content: content.trim(),
+  ...(bloomLevel ? { bloomLevel } : {}),
+  ...(difficultyLevel ? { difficultyLevel: Number(difficultyLevel) } : {}),
+})
 
 export const getQuestionBanks = (signal) => get(basePath, { signal })
 export const getQuestionBank = (bankId, signal) =>
@@ -33,6 +38,12 @@ export const updateQuestion = (bankId, questionId, request, signal) =>
   put(questionPath(bankId, questionId), questionBody(request), { signal })
 export const deleteQuestion = (bankId, questionId, signal) =>
   del(questionPath(bankId, questionId), { signal })
+// All rows or none: a 422 carries the per-row errors in error.problem.errors.
+export const importQuestions = (bankId, file, signal) => {
+  const body = new FormData()
+  body.append('file', file)
+  return post(`${questionsPath(bankId)}/import`, body, { signal })
+}
 
 const keyPointsPath = (bankId, questionId) =>
   `${questionPath(bankId, questionId)}/expected-key-points`

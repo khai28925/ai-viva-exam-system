@@ -169,6 +169,41 @@ public static class QuestionBankEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound);
 
+        banks.MapPost("/{bankId}/questions/import", async (
+            Guid bankId,
+            IFormFile file,
+            IQuestionImportService service,
+            CancellationToken ct) =>
+        {
+            if (file.Length is < 1 or > 1024 * 1024 ||
+                !string.Equals(Path.GetExtension(file.FileName), ".csv", StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Invalid import file",
+                    detail: "Chỉ nhận tệp .csv (UTF-8) tối đa 1 MB.",
+                    extensions: new Dictionary<string, object?> { ["code"] = "invalid_import_file" });
+            }
+
+            using var reader = new StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8, true);
+            var result = await service.ImportAsync(bankId, await reader.ReadToEndAsync(ct), ct);
+            if (result is null)
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question bank with id '{bankId}' was not found.");
+            }
+            return result.Errors.Count == 0 ? Results.Ok(result) : Results.UnprocessableEntity(result);
+        })
+        .DisableAntiforgery()
+        .WithName("ImportQuestions")
+        .WithSummary("Import questions, Bloom levels and expected key points from CSV (all rows or none).")
+        .Produces<QuestionImportResult>(StatusCodes.Status200OK)
+        .Produces<QuestionImportResult>(StatusCodes.Status422UnprocessableEntity)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
         banks.MapPut("/{bankId}/questions/{questionId}", async (
             Guid bankId,
             Guid questionId,

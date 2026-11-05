@@ -26,6 +26,7 @@ public sealed class QuestionService(IQuestionBankRepository questionBankReposito
         if (bank is null) return null;
 
         var question = new Question(questionBankId, request.Content);
+        question.UpdateClassification(request.BloomLevel, request.DifficultyLevel);
         var added = await questionBankRepository.AddQuestionAsync(question, ct);
         if (!added) return null;
 
@@ -38,6 +39,7 @@ public sealed class QuestionService(IQuestionBankRepository questionBankReposito
         if (question is null) return null;
 
         question.UpdateContent(request.Content);
+        question.UpdateClassification(request.BloomLevel, request.DifficultyLevel);
         var updated = await questionBankRepository.UpdateQuestionAsync(question, ct);
         if (!updated) return null;
 
@@ -55,6 +57,8 @@ public sealed class QuestionService(IQuestionBankRepository questionBankReposito
             question.Id,
             question.QuestionBankId,
             question.Content,
-            question.CreatedAt);
+            question.CreatedAt,
+            question.BloomLevel,
+            question.DifficultyLevel);
     }
 }

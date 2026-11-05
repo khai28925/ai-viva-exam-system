@@ -1,0 +1,61 @@
+stateDiagram-v2
+    direction LR
+
+    %% Three independent lifecycles; an ExamSession does not become an ExamAttempt.
+    state "ExamSession - WF1 / M3 target" as Session {
+        [*] --> SessionDraft: Lecturer/Admin creates Draft
+        SessionDraft --> SessionDraft: Edit title or selected questions
+        SessionDraft --> SessionDraft: Change bank [selection empty]
+        SessionDraft --> SessionOpen: Publish [preparation complete]
+        SessionDraft --> [*]: Delete [no attempts]
+        SessionOpen --> SessionClosed: Lecturer/Admin closes session
+    }
+
+    state "ExamAttempt - WF2 planned" as Attempt {
+        [*] --> AttemptInProgress: Student joins [session Open]
+        AttemptInProgress --> AttemptInProgress: Same student rejoins [session Open]
+
+        state "InProgress" as AttemptInProgress {
+            [*] --> MainQuestion: Load next selected Bank question
+            MainQuestion --> AwaitingAnswer: Show text / play TTS
+            FollowUpQuestion --> AwaitingAnswer: Show text / play TTS
+            AwaitingAnswer --> AnswerSubmitted: Submit spoken answer
+            AnswerSubmitted --> Transcribing: Store audio and run STT
+            Transcribing --> Evaluating: Transcript + key points + rubric ready
+            Evaluating --> FollowUpQuestion: Missing points / unclear answer
+            Evaluating --> MainQuestion: Accepted [more main questions]
+            Evaluating --> [*]: Accepted [no main questions remain]
+        }
+
+        AttemptInProgress --> AttemptCompleted: Finish after final evaluation
+    }
+
+    state "Report - WF3 planned" as Report {
+        [*] --> ReportAvailable: Generate [attempt Completed]
+    }
+
+    note right of Session
+        QuestionBank has no persisted Ready status.
+        Publish requires selected questions, expected key points,
+        a rubric and criteria with total weight 1.0000.
+        Closed persists and cannot reopen; closing blocks new joins
+        but does not delete or complete existing attempts.
+    end note
+
+    note right of Attempt
+        InProgress is the only attempt status reachable in current code.
+        Audio, TTS, STT, AI evaluation, follow-up and completion
+        are planned WF2 steps, not implemented M3 endpoints.
+        Cancelled is DB-allowed but has no defined transition yet.
+    end note
+
+    note right of Report
+        Report generation and authorized replay/review are planned.
+        Viewing a report does not change session or report status.
+    end note
+
+    note left of Session
+        M3 contract is the target for Session transitions.
+        Current API still permits creating Open/Closed directly
+        and changing status without enforcing this state machine.
+    end note

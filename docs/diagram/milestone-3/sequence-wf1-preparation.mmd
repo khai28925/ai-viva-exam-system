@@ -1,0 +1,84 @@
+sequenceDiagram
+    autonumber
+    title WF1 - Prepare and publish an oral exam (Milestone 3 target)
+    actor Lecturer
+    actor Student
+    participant UI as React UI
+    participant API as ASP.NET API
+    participant Service as Application / Infrastructure
+    participant DB as PostgreSQL
+
+    Note over Lecturer,DB: Target WF1 contract. Auth cookie and X-CSRF-TOKEN are required for writes.
+    Lecturer->>UI: Sign in and open Question Bank workspace
+    UI->>API: POST /api/v1/auth/login (after GET /auth/csrf)
+    API-->>UI: Auth cookie and Lecturer role
+
+    Lecturer->>UI: Create Question Bank
+    UI->>API: POST /api/v1/question-banks
+    API->>Service: Validate and create bank
+    Service->>DB: INSERT question_banks
+    DB-->>Service: Bank ID
+    Service-->>API: Bank DTO
+    API-->>UI: 201 Created
+
+    loop For each main question
+        Lecturer->>UI: Add question to bank
+        UI->>API: POST /api/v1/question-banks/{bankId}/questions
+        API->>Service: Validate and create question
+        Service->>DB: INSERT questions
+        DB-->>Service: Question ID
+        Service-->>UI: Question DTO
+        loop For each expected key point
+            Lecturer->>UI: Enter expected key point
+            UI->>API: POST .../questions/{questionId}/expected-key-points
+            API->>Service: Validate question and content
+            Service->>DB: INSERT expected_key_points
+            Service-->>UI: 201 Key point DTO
+        end
+    end
+
+    Lecturer->>UI: Define rubric and weighted criteria
+    UI->>API: POST /api/v1/question-banks/{bankId}/rubric
+    API->>Service: Validate and create rubric
+    Service->>DB: INSERT rubrics
+    Service-->>UI: 201 Rubric DTO
+    loop For each criterion
+        UI->>API: POST .../rubric/criteria
+        API->>Service: Validate maxScore and weight
+        Service->>DB: INSERT rubric_criteria
+        Service-->>UI: 201 Criterion DTO
+    end
+
+    Lecturer->>UI: Create Draft session for this bank
+    UI->>API: POST /api/v1/exam-sessions (status Draft)
+    API->>Service: Validate and create session
+    Service->>DB: INSERT exam_sessions
+    Service-->>UI: 201 Session DTO
+    Lecturer->>UI: Select questions and their order
+    UI->>API: PUT /api/v1/exam-sessions/{id}/questions
+    API->>Service: Check Draft, bank membership and unique IDs
+    Service->>DB: Replace exam_session_questions with content snapshots
+    Service-->>UI: 200 Selected questions
+
+    Lecturer->>UI: Publish session
+    UI->>API: PUT /api/v1/exam-sessions/{id} (status Open)
+    API->>Service: Begin transaction and check readiness
+    Service->>DB: Check selection, key points, rubric and weight = 1
+    alt Missing preparation data
+        DB-->>Service: Missing items
+        Service-->>API: session_not_ready + missing codes
+        API-->>UI: 409 Conflict with missing fields
+    else Ready
+        Service->>DB: UPDATE exam_sessions to Open and commit
+        Service-->>API: Open session DTO
+        API-->>UI: 200 Open session
+    end
+
+    Note over Student,DB: Handoff to WF2. Basic Student join is part of the M3 demo.
+    Student->>UI: View Open sessions and choose Vao thi
+    UI->>API: GET /api/v1/exam-sessions then POST /{id}/join
+    API->>Service: Check Student role and Open status
+    Service->>DB: Get or create exam_attempt and read selected snapshots
+    DB-->>Service: Attempt and ordered selected questions
+    Service-->>UI: 200 Attempt DTO (same attempt on repeat join)
+    UI-->>Student: Show selected questions only

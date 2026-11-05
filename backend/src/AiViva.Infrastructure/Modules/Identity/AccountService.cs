@@ -68,13 +68,14 @@ public sealed class AccountService(
         var role = await db.Roles.SingleAsync(item => item.Code == roleCode, ct);
         var user = new UserAccount(request.Email, role.Id);
         user.SetPasswordHash(passwordHasher.HashPassword(user, request.Password));
+        user.UpdateProfile(request.FullName, request.StudentCode);
         db.Users.Add(user);
         try
         {
             await db.SaveChangesAsync(ct);
             return new CreateAccountResult(
                 CreateAccountStatus.Created,
-                new AccountDto(user.Id, user.Email, role.Code));
+                new AccountDto(user.Id, user.Email, role.Code, user.FullName, user.StudentCode));
         }
         catch (DbUpdateException exception) when (
             exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
@@ -83,6 +84,19 @@ public sealed class AccountService(
         }
     }
 
+    public async Task<AccountDto?> UpdateProfileAsync(
+        Guid id,
+        UpdateAccountProfileRequest request,
+        CancellationToken ct = default)
+    {
+        var user = await db.Users.Include(account => account.Role)
+            .SingleOrDefaultAsync(account => account.Id == id, ct);
+        if (user is null) return null;
+        user.UpdateProfile(request.FullName, request.StudentCode);
+        await db.SaveChangesAsync(ct);
+        return ToDto(user);
+    }
+
     private static AccountDto ToDto(UserAccount user) =>
-        new(user.Id, user.Email, user.Role.Code);
+        new(user.Id, user.Email, user.Role.Code, user.FullName, user.StudentCode);
 }

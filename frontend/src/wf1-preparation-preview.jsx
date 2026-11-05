@@ -333,7 +333,7 @@ export function Wf1PreparationPreview() {
         {mode === 'lecturer' ? (
           <ol className="wf-steps">
             <li>
-              01 <span>Ngân hàng & câu hỏi</span>
+              01 <span>Bộ câu hỏi</span>
             </li>
             <li>
               02 <span>Ý chính kỳ vọng</span>
@@ -433,10 +433,7 @@ export function Wf1PreparationPreview() {
                   <h1>
                     Chuẩn bị phiên thi<span>.</span>
                   </h1>
-                  <p>
-                    Từ ngân hàng câu hỏi đến phiên vấn đáp sẵn sàng cho sinh
-                    viên.
-                  </p>
+                  <p>Từ bộ câu hỏi đến phiên vấn đáp sẵn sàng cho sinh viên.</p>
                 </div>
                 <div className="wf-hero__stat">
                   <strong>
@@ -454,14 +451,16 @@ export function Wf1PreparationPreview() {
                   <div className="wf-card__heading">
                     <div>
                       <span className="wf-kicker">01–02 / NỘI DUNG GỐC</span>
-                      <h2 id="wf-bank-title">Ngân hàng & câu hỏi</h2>
-                      <p>Chọn ngân hàng và một câu hỏi để biên soạn ý chính.</p>
+                      <h2 id="wf-bank-title">Bộ câu hỏi</h2>
+                      <p>
+                        Chọn bộ câu hỏi và một câu hỏi để biên soạn ý chính.
+                      </p>
                     </div>
                   </div>
                   {banks.length === 0 ? (
                     <p className="wf-empty">
-                      Chưa có ngân hàng câu hỏi. Tạo ngân hàng trước khi chuẩn
-                      bị phiên.
+                      Chưa có bộ câu hỏi. Tạo bộ câu hỏi trước khi chuẩn bị
+                      phiên.
                     </p>
                   ) : (
                     <>
@@ -469,7 +468,7 @@ export function Wf1PreparationPreview() {
                         className="wf-select-label"
                         htmlFor="wf-bank-select"
                       >
-                        Ngân hàng đang sử dụng
+                        Bộ câu hỏi đang sử dụng
                       </label>
                       <select
                         id="wf-bank-select"
@@ -484,14 +483,12 @@ export function Wf1PreparationPreview() {
                         ))}
                       </select>
                       <p className="wf-bank-description">
-                        {bank?.description || 'Chưa có mô tả ngân hàng.'}
+                        {bank?.description || 'Chưa có mô tả bộ câu hỏi.'}
                       </p>
                       <div className="wf-question-rail">
                         <span>{questions.length} CÂU HỎI LOẠI BANK</span>
                         {questions.length === 0 ? (
-                          <p className="wf-empty">
-                            Ngân hàng này chưa có câu hỏi.
-                          </p>
+                          <p className="wf-empty">Bộ này chưa có câu hỏi.</p>
                         ) : (
                           questions.map((item, index) => (
                             <button

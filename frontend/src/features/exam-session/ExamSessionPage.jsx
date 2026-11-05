@@ -5,6 +5,7 @@ import { getQuestionBanks } from '../../api/questionBankApi.js'
 import { useAuth } from '../auth/authContext.js'
 import SessionLayout from '../auth/SessionLayout.jsx'
 import SessionPreparationPanel from './SessionPreparationPanel.jsx'
+import InterviewSettingsPanel from '../interview/InterviewSettingsPanel.jsx'
 import './examSession.css'
 
 const statusLabels = { Draft: 'Bản nháp', Open: 'Đang mở', Closed: 'Đã đóng' }
@@ -24,7 +25,7 @@ function errorMessage(error, action) {
     )
   }
   if (error.status === 404)
-    return 'Phiên thi hoặc ngân hàng không còn tồn tại. Hãy tải lại danh sách.'
+    return 'Phiên thi hoặc bộ câu hỏi không còn tồn tại. Hãy tải lại danh sách.'
   if (error.status === 400) {
     const errors = Object.values(error.problem?.errors ?? {})
       .flat()
@@ -53,7 +54,7 @@ function SessionForm({ session, banks, pending, error, onSave, onCancel }) {
       return
     }
     if (!bankId) {
-      setValidation('Hãy chọn ngân hàng câu hỏi.')
+      setValidation('Hãy chọn bộ câu hỏi.')
       return
     }
     setValidation('')
@@ -75,14 +76,14 @@ function SessionForm({ session, banks, pending, error, onSave, onCancel }) {
             required
             onChange={(event) => setTitle(event.target.value)}
           />
-          <label htmlFor="exam-bank">Ngân hàng câu hỏi</label>
+          <label htmlFor="exam-bank">Bộ câu hỏi</label>
           <select
             id="exam-bank"
             value={bankId}
             required
             onChange={(event) => setBankId(event.target.value)}
           >
-            <option value="">Chọn ngân hàng</option>
+            <option value="">Chọn bộ câu hỏi</option>
             {banks.map((bank) => (
               <option key={bank.id} value={bank.id}>
                 {bank.name}
@@ -91,7 +92,8 @@ function SessionForm({ session, banks, pending, error, onSave, onCancel }) {
           </select>
           <p>
             Phiên mới bắt đầu ở trạng thái Draft. Hãy chọn câu hỏi, thêm ý chính
-            và rubric rồi mở phiên. Không thể đổi ngân hàng khi đã chọn câu hỏi.
+            và rubric rồi mở phiên. Không thể đổi bộ câu hỏi khi đã chọn câu
+            hỏi.
           </p>
           {(validation || error) && (
             <p className="auth-form-error" role="alert">
@@ -178,7 +180,6 @@ export default function ExamSessionPage() {
   const [revision, setRevision] = useState(0)
   const [form, setForm] = useState(null)
   const [deleting, setDeleting] = useState(null)
-  const [attempt, setAttempt] = useState(null)
   const [preparingId, setPreparingId] = useState(null)
   const requests = useRef(null)
   const busy = useRef(false)
@@ -218,7 +219,6 @@ export default function ExamSessionPage() {
     if (busy.current) return
     setForm(null)
     setDeleting(null)
-    setAttempt(null)
     setPreparingId(null)
     setActionError('')
     setLoadError('')
@@ -270,266 +270,232 @@ export default function ExamSessionPage() {
   return (
     <SessionLayout
       title={teacher ? 'Quản lý phiên thi' : 'Phiên thi của bạn'}
-      eyebrow="EXAM SESSIONS / BẢN CƠ BẢN"
+      eyebrow="EXAM SESSIONS / AI VIVA"
       description={
         teacher
           ? 'Tạo phiên Draft, chọn câu hỏi và kiểm tra điều kiện trước khi mở cho sinh viên.'
-          : 'Chọn một phiên đang mở để vào xem câu hỏi.'
+          : 'Chọn phiên đang mở để thi vấn đáp với AI.'
       }
       busy={pending}
     >
       <p className="exam-scope">
-        Bản cơ bản: chưa nộp bài/chấm điểm, chưa có lịch thi, AI hoặc ghi âm.
-        Việc vào thi được lưu vào hệ thống.
+        Mỗi câu có thời gian trả lời và số lượt hỏi thêm theo cấu hình. Kết quả
+        AI và bảng điểm được lưu sau khi hoàn thành bài thi.
       </p>
-      {attempt ? (
-        <section
-          className="auth-card exam-attempt"
-          aria-labelledby="exam-attempt-title"
-        >
-          <span>ĐÃ VÀO PHIÊN THI</span>
-          <h2 id="exam-attempt-title">{attempt.title}</h2>
-          <p>
-            Thời điểm tham gia:{' '}
-            {new Date(attempt.startedAt).toLocaleString('vi-VN')}
-          </p>
-          <p>
-            Câu hỏi chỉ để đọc trong bản demo này; chưa có ô trả lời hoặc nút
-            nộp bài.
-          </p>
-          <ol className="exam-questions">
-            {attempt.questions.map((question) => (
-              <li key={question.id}>{question.content}</li>
-            ))}
-          </ol>
-          {attempt.questions.length === 0 && (
-            <p>Phiên chưa có câu hỏi để hiển thị.</p>
-          )}
-          <button className="exam-button" type="button" onClick={reload}>
-            Về danh sách phiên thi
-          </button>
-        </section>
-      ) : (
-        <>
-          <div className="exam-toolbar">
-            <h2>{teacher ? 'Danh sách phiên thi' : 'Phiên đang mở'}</h2>
-            <div className="exam-actions">
+      <>
+        <div className="exam-toolbar">
+          <h2>{teacher ? 'Danh sách phiên thi' : 'Phiên đang mở'}</h2>
+          <div className="exam-actions">
+            <button
+              className="exam-button"
+              type="button"
+              onClick={reload}
+              disabled={loading || pending}
+            >
+              Tải lại
+            </button>
+            {teacher && (
               <button
-                className="exam-button"
+                className="exam-button exam-button--primary"
                 type="button"
-                onClick={reload}
-                disabled={loading || pending}
+                disabled={loading || pending || !!loadError || !!form}
+                onClick={() => {
+                  setForm({ session: null })
+                  setActionError('')
+                  setNotice('')
+                }}
               >
-                Tải lại
+                Tạo phiên thi
               </button>
-              {teacher && (
-                <button
-                  className="exam-button exam-button--primary"
-                  type="button"
-                  disabled={loading || pending || !!loadError || !!form}
-                  onClick={() => {
-                    setForm({ session: null })
-                    setActionError('')
-                    setNotice('')
-                  }}
-                >
-                  Tạo phiên thi
-                </button>
-              )}
-            </div>
+            )}
           </div>
-          {notice && (
-            <p className="auth-form-success" role="status">
-              {notice}
-            </p>
-          )}
-          {actionError && !form && !deleting && (
-            <p className="auth-form-error" role="alert">
-              {actionError}
-            </p>
-          )}
-          {loading ? (
-            <p role="status">Đang tải phiên thi...</p>
-          ) : loadError ? (
-            <div className="auth-form-error" role="alert">
-              <p>{loadError}</p>
-              <button className="exam-button" type="button" onClick={reload}>
-                Thử lại
-              </button>
-            </div>
-          ) : (
-            <>
-              {form && (
-                <SessionForm
-                  key={form.session?.id ?? 'new'}
-                  session={form.session}
-                  banks={banks}
-                  pending={pending}
-                  error={actionError}
-                  onSave={save}
-                  onCancel={() => {
-                    setForm(null)
-                    setActionError('')
-                  }}
-                />
-              )}
-              {teacher && banks.length === 0 && (
-                <p className="exam-scope">
-                  Chưa có ngân hàng câu hỏi.{' '}
-                  <Link to="/question-banks">
-                    Tạo ngân hàng và câu hỏi trước
-                  </Link>
-                  .
-                </p>
-              )}
-              {sessions.length === 0 ? (
-                <p className="exam-empty">
-                  {teacher
-                    ? 'Chưa có phiên thi. Tạo phiên đầu tiên để bắt đầu.'
-                    : 'Chưa có phiên thi đang mở. Hãy quay lại khi giảng viên mở phiên.'}
-                </p>
-              ) : (
-                <div className="exam-list">
-                  {sessions.map((session) => (
-                    <article
-                      className="auth-card exam-card"
-                      key={session.id}
-                      aria-label={session.title}
-                    >
-                      <div className="exam-card__heading">
-                        <h3>{session.title}</h3>
-                        <span
-                          className={`exam-badge exam-badge--${session.status.toLowerCase()}`}
-                        >
-                          {statusLabels[session.status] ?? session.status}
-                        </span>
-                      </div>
-                      <p>Ngân hàng: {session.questionBankName}</p>
-                      <p>{session.participantCount} sinh viên đã tham gia</p>
-                      <div className="exam-actions">
-                        {teacher ? (
-                          <>
-                            <button
-                              className="exam-button"
-                              type="button"
-                              disabled={
-                                pending || !!form || session.status !== 'Draft'
-                              }
-                              onClick={() => {
-                                setForm({ session })
-                                setActionError('')
-                                setNotice('')
-                              }}
-                              aria-label={`Sửa ${session.title}`}
-                            >
-                              Sửa
-                            </button>
-                            <button
-                              className="exam-button exam-button--danger"
-                              type="button"
-                              disabled={
-                                pending || !!form || session.status !== 'Draft'
-                              }
-                              onClick={() => {
-                                setDeleting(session)
-                                setActionError('')
-                                setNotice('')
-                              }}
-                              aria-label={`Xóa ${session.title}`}
-                            >
-                              Xóa
-                            </button>
-                            <button
-                              className="exam-button"
-                              type="button"
-                              disabled={pending || !!form}
-                              onClick={() =>
-                                setPreparingId((current) =>
-                                  current === session.id ? null : session.id,
-                                )
-                              }
-                            >
-                              {preparingId === session.id
-                                ? 'Ẩn chuẩn bị đề'
-                                : 'Chuẩn bị đề'}
-                            </button>
-                            {session.status === 'Open' && (
-                              <button
-                                className="exam-button"
-                                type="button"
-                                disabled={pending}
-                                onClick={() =>
-                                  mutate(
-                                    'close',
-                                    (signal) =>
-                                      api.updateExamSession(
-                                        session.id,
-                                        {
-                                          title: session.title,
-                                          questionBankId:
-                                            session.questionBankId,
-                                          status: 'Closed',
-                                        },
-                                        signal,
-                                      ),
-                                    (result) =>
-                                      setSessions((current) =>
-                                        current.map((item) =>
-                                          item.id === result.id ? result : item,
-                                        ),
-                                      ),
-                                  )
-                                }
-                              >
-                                Đóng phiên
-                              </button>
-                            )}
-                          </>
-                        ) : (
+        </div>
+        {notice && (
+          <p className="auth-form-success" role="status">
+            {notice}
+          </p>
+        )}
+        {actionError && !form && !deleting && (
+          <p className="auth-form-error" role="alert">
+            {actionError}
+          </p>
+        )}
+        {loading ? (
+          <p role="status">Đang tải phiên thi...</p>
+        ) : loadError ? (
+          <div className="auth-form-error" role="alert">
+            <p>{loadError}</p>
+            <button className="exam-button" type="button" onClick={reload}>
+              Thử lại
+            </button>
+          </div>
+        ) : (
+          <>
+            {form && (
+              <SessionForm
+                key={form.session?.id ?? 'new'}
+                session={form.session}
+                banks={banks}
+                pending={pending}
+                error={actionError}
+                onSave={save}
+                onCancel={() => {
+                  setForm(null)
+                  setActionError('')
+                }}
+              />
+            )}
+            {teacher && banks.length === 0 && (
+              <p className="exam-scope">
+                Chưa có bộ câu hỏi.{' '}
+                <Link to="/question-banks">Tạo bộ câu hỏi trước</Link>.
+              </p>
+            )}
+            {sessions.length === 0 ? (
+              <p className="exam-empty">
+                {teacher
+                  ? 'Chưa có phiên thi. Tạo phiên đầu tiên để bắt đầu.'
+                  : 'Chưa có phiên thi đang mở. Hãy quay lại khi giảng viên mở phiên.'}
+              </p>
+            ) : (
+              <div className="exam-list">
+                {sessions.map((session) => (
+                  <article
+                    className="auth-card exam-card"
+                    key={session.id}
+                    aria-label={session.title}
+                  >
+                    <div className="exam-card__heading">
+                      <h3>{session.title}</h3>
+                      <span
+                        className={`exam-badge exam-badge--${session.status.toLowerCase()}`}
+                      >
+                        {statusLabels[session.status] ?? session.status}
+                      </span>
+                    </div>
+                    <p>Bộ câu hỏi: {session.questionBankName}</p>
+                    <p>{session.participantCount} sinh viên đã tham gia</p>
+                    <div className="exam-actions">
+                      {teacher ? (
+                        <>
                           <button
-                            className="exam-button exam-button--primary"
+                            className="exam-button"
                             type="button"
-                            disabled={pending || session.status !== 'Open'}
+                            disabled={
+                              pending || !!form || session.status !== 'Draft'
+                            }
+                            onClick={() => {
+                              setForm({ session })
+                              setActionError('')
+                              setNotice('')
+                            }}
+                            aria-label={`Sửa ${session.title}`}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            className="exam-button exam-button--danger"
+                            type="button"
+                            disabled={
+                              pending || !!form || session.status !== 'Draft'
+                            }
+                            onClick={() => {
+                              setDeleting(session)
+                              setActionError('')
+                              setNotice('')
+                            }}
+                            aria-label={`Xóa ${session.title}`}
+                          >
+                            Xóa
+                          </button>
+                          <button
+                            className="exam-button"
+                            type="button"
+                            disabled={pending || !!form}
                             onClick={() =>
-                              mutate(
-                                'join',
-                                (signal) =>
-                                  api.joinExamSession(session.id, signal),
-                                (result) =>
-                                  setAttempt({
-                                    ...result,
-                                    title: session.title,
-                                  }),
+                              setPreparingId((current) =>
+                                current === session.id ? null : session.id,
                               )
                             }
                           >
-                            {pending ? 'Đang xử lý...' : 'Vào thi'}
+                            {preparingId === session.id
+                              ? 'Ẩn chuẩn bị đề'
+                              : 'Chuẩn bị đề'}
                           </button>
-                        )}
-                      </div>
-                      {teacher && preparingId === session.id && (
-                        <SessionPreparationPanel
-                          key={session.id}
-                          session={session}
-                          onAccessError={handleAccessError}
-                          onPublished={(result) => {
-                            setSessions((current) =>
-                              current.map((item) =>
-                                item.id === result.id ? result : item,
-                              ),
+                          {session.status === 'Open' && (
+                            <button
+                              className="exam-button"
+                              type="button"
+                              disabled={pending}
+                              onClick={() =>
+                                mutate(
+                                  'close',
+                                  (signal) =>
+                                    api.updateExamSession(
+                                      session.id,
+                                      {
+                                        title: session.title,
+                                        questionBankId: session.questionBankId,
+                                        status: 'Closed',
+                                      },
+                                      signal,
+                                    ),
+                                  (result) =>
+                                    setSessions((current) =>
+                                      current.map((item) =>
+                                        item.id === result.id ? result : item,
+                                      ),
+                                    ),
+                                )
+                              }
+                            >
+                              Đóng phiên
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <button
+                          className="exam-button exam-button--primary"
+                          type="button"
+                          disabled={pending || session.status !== 'Open'}
+                          onClick={() =>
+                            mutate(
+                              'join',
+                              (signal) =>
+                                api.joinExamSession(session.id, signal),
+                              (result) => navigate(`/interviews/${result.id}`),
                             )
-                            setNotice('Phiên đã mở cho sinh viên.')
-                          }}
-                        />
+                          }
+                        >
+                          {pending ? 'Đang xử lý...' : 'Vào thi'}
+                        </button>
                       )}
-                    </article>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </>
-      )}
+                    </div>
+                    {teacher && preparingId === session.id && (
+                      <InterviewSettingsPanel session={session} />
+                    )}
+                    {teacher && preparingId === session.id && (
+                      <SessionPreparationPanel
+                        key={session.id}
+                        session={session}
+                        onAccessError={handleAccessError}
+                        onPublished={(result) => {
+                          setSessions((current) =>
+                            current.map((item) =>
+                              item.id === result.id ? result : item,
+                            ),
+                          )
+                          setNotice('Phiên đã mở cho sinh viên.')
+                        }}
+                      />
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </>
       {deleting && (
         <DeleteConfirmation
           session={deleting}

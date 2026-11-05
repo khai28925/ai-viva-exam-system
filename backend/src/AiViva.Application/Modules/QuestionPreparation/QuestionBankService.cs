@@ -47,6 +47,7 @@ public sealed class QuestionBankService(IQuestionBankRepository questionBankRepo
             bank.Id,
             bank.Name,
             bank.Description,
-            bank.CreatedAt);
+            bank.CreatedAt,
+            bank.SubjectId == Guid.Empty ? null : bank.SubjectId);
     }
 }

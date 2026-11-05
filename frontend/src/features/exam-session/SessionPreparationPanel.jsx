@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as sessionApi from '../../api/examSessionApi.js'
 import * as bankApi from '../../api/questionBankApi.js'
+import * as wf1Api from '../../api/wf1Api.js'
 import QuestionSelectionCard from '../wf1-preparation/QuestionSelectionCard.jsx'
 import ReadinessCard from '../wf1-preparation/ReadinessCard.jsx'
 import { describePreparationError } from '../wf1-preparation/feedback.js'
@@ -21,23 +22,24 @@ export default function SessionPreparationPanel({
 
   useEffect(() => {
     const controller = new AbortController()
+    const rubricSetPromise = wf1Api
+      .getSubjects({ signal: controller.signal })
+      .then((subjects) => {
+        const subject = subjects.find((item) =>
+          item.questionBanks.some((bank) => bank.id === session.questionBankId),
+        )
+        return subject
+          ? wf1Api.getSubjectWorkspace(subject.id, {
+              signal: controller.signal,
+            })
+          : null
+      })
     Promise.all([
       bankApi.getQuestions(session.questionBankId, controller.signal),
       sessionApi.getExamSessionQuestions(session.id, controller.signal),
-      bankApi
-        .getRubric(session.questionBankId, controller.signal)
-        .catch((failure) => {
-          if (failure.status === 404) return null
-          throw failure
-        }),
-      bankApi
-        .getRubricCriteria(session.questionBankId, controller.signal)
-        .catch((failure) => {
-          if (failure.status === 404) return []
-          throw failure
-        }),
+      rubricSetPromise,
     ])
-      .then(async ([bankQuestions, selectedQuestions, rubric, criteria]) => {
+      .then(async ([bankQuestions, selectedQuestions, workspace]) => {
         const pointLists = await Promise.all(
           selectedQuestions.map((item) =>
             bankApi.getExpectedKeyPoints(
@@ -54,11 +56,18 @@ export default function SessionPreparationPanel({
         const gaps = []
         if (selectedQuestions.length === 0) gaps.push('selection')
         if (unprepared.length > 0) gaps.push('keyPoints')
-        if (!rubric) gaps.push('rubric')
-        else if (criteria.length === 0) gaps.push('rubricCriteria')
+        const rubrics = workspace?.approvedRubricSet?.rubrics ?? []
+        if (!workspace?.approvedRubricSet) gaps.push('rubric')
         else if (
-          Math.abs(criteria.reduce((sum, item) => sum + item.weight, 0) - 1) >
-          0.00001
+          rubrics.length === 0 ||
+          rubrics.some((rubric) => rubric.criteria.length === 0)
+        )
+          gaps.push('rubricCriteria')
+        else if (
+          Math.abs(
+            rubrics.reduce((sum, rubric) => sum + rubric.weightPercent, 0) -
+              100,
+          ) > 0.001
         )
           gaps.push('rubricWeight')
         setQuestions(bankQuestions)

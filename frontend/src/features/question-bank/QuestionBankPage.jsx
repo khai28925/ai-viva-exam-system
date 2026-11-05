@@ -64,7 +64,7 @@ export default function QuestionBankPage() {
         handleAccessError(error)
         setLoadError(
           error.status === 404
-            ? 'Một ngân hàng vừa bị xóa. Hãy tải lại danh sách.'
+            ? 'Một bộ câu hỏi vừa bị xóa. Hãy tải lại danh sách.'
             : 'Không thể kết nối hoặc tải đầy đủ dữ liệu từ API. Vui lòng thử lại.',
         )
       })
@@ -201,6 +201,15 @@ export default function QuestionBankPage() {
             questions: current.questions.map((item) =>
               item.id === questionId ? question : item,
             ),
+          }),
+        )
+      }
+      onImportQuestions={(bankId, file) =>
+        mutate(
+          (signal) => api.importQuestions(bankId, file, signal),
+          (current, result) => ({
+            ...current,
+            questions: [...current.questions, ...result.questions],
           }),
         )
       }

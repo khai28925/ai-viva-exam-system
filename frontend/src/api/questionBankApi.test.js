@@ -62,6 +62,16 @@ describe('Question Bank HTTP contract', () => {
       { content: 'Updated?' },
     ],
     [
+      'createQuestion',
+      [
+        'bank-1',
+        { content: ' Classified? ', bloomLevel: 'Apply', difficultyLevel: '3' },
+      ],
+      'POST',
+      '/v1/question-banks/bank-1/questions',
+      { content: 'Classified?', bloomLevel: 'Apply', difficultyLevel: 3 },
+    ],
+    [
       'deleteQuestionBank',
       ['bank-1'],
       'DELETE',
@@ -106,6 +116,33 @@ describe('Question Bank HTTP contract', () => {
       }
     },
   )
+
+  it('uploads a CSV import as multipart form data and surfaces per-row errors', async () => {
+    const problem = {
+      importedCount: 0,
+      errors: [{ rowNumber: 2, message: 'nội dung cần từ 1 đến 2000 ký tự' }],
+      questions: [],
+    }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json({ token: 'csrf-import' }))
+      .mockResolvedValueOnce(json(problem, 422))
+    vi.stubGlobal('fetch', fetchMock)
+    const file = new File(['content\n\n'], 'questions.csv', {
+      type: 'text/csv',
+    })
+
+    const error = await api.importQuestions('bank-1', file).catch((e) => e)
+
+    expect(error.status).toBe(422)
+    expect(error.problem.errors).toEqual(problem.errors)
+    const [path, options] = fetchMock.mock.calls[1]
+    expect(path).toBe('/api/v1/question-banks/bank-1/questions/import')
+    expect(options.method).toBe('POST')
+    expect(options.body).toBeInstanceOf(FormData)
+    expect(options.body.get('file').name).toBe('questions.csv')
+    expect(options.headers).not.toHaveProperty('Content-Type')
+  })
 
   it('retains problem details on a 409 rather than pretending the bank was deleted', async () => {
     const problem = {

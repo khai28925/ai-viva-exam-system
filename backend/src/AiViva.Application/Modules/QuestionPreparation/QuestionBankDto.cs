@@ -6,7 +6,8 @@ public sealed record QuestionBankDto(
     Guid Id,
     string Name,
     string? Description,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    Guid? SubjectId = null);
 
 public sealed record CreateQuestionBankRequest
 {

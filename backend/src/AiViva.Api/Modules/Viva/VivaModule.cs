@@ -7,6 +7,7 @@ public static class VivaModule
     public static RouteGroupBuilder MapVivaModule(this RouteGroupBuilder api)
     {
         api.MapExamSessionEndpoints();
+        api.MapInterviewEndpoints();
         return api;
     }
 }

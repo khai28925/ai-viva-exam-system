@@ -4,9 +4,9 @@ import { describePreparationError } from './feedback.js'
 const readinessLabels = {
   selection: 'Đã chọn ít nhất một câu hỏi',
   keyPoints: 'Mỗi câu đã chọn có ý chính kỳ vọng',
-  rubric: 'Ngân hàng có rubric',
-  rubricCriteria: 'Rubric có ít nhất một tiêu chí',
-  rubricWeight: 'Tổng trọng số tiêu chí bằng 1.0000',
+  rubric: 'Môn học có bộ rubric đã duyệt',
+  rubricCriteria: 'Mỗi rubric có ít nhất một tiêu chí',
+  rubricWeight: 'Tổng tỷ trọng rubric bằng 100%',
 }
 
 export default function ReadinessCard({

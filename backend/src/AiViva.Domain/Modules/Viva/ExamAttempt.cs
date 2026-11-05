@@ -24,4 +24,11 @@ public sealed class ExamAttempt
     public DateTimeOffset StartedAt { get; private set; }
     public DateTimeOffset? CompletedAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+
+    public void Complete()
+    {
+        if (Status != "InProgress") return;
+        Status = "Completed";
+        CompletedAt = DateTimeOffset.UtcNow;
+    }
 }

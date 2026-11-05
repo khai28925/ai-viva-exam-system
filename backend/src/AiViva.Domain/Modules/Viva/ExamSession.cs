@@ -17,6 +17,11 @@ public sealed class ExamSession
     public string Title { get; private set; } = string.Empty;
     public Guid QuestionBankId { get; private set; }
     public Guid? ScheduleId { get; private set; }
+    public Guid? RubricSetId { get; private set; }
+    public int AnswerTimeSeconds { get; private set; } = 120;
+    public int MaxFollowUps { get; private set; } = 2;
+    public string Language { get; private set; } = "vi-VN";
+    public string AnswerMode { get; private set; } = AnswerModes.Voice;
     public string Status { get; private set; } = Statuses.Draft;
     public Guid CreatedBy { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
@@ -45,5 +50,33 @@ public sealed class ExamSession
         public const string Closed = "Closed";
 
         public static bool IsValid(string? status) => status is Draft or Open or Closed;
+    }
+
+    public static class AnswerModes
+    {
+        // Voice: only the server-side transcript of the uploaded recording is graded.
+        // VoiceOrText: the student may correct or type the transcript (accessibility).
+        public const string Voice = "Voice";
+        public const string VoiceOrText = "VoiceOrText";
+
+        public static bool IsValid(string? mode) => mode is Voice or VoiceOrText;
+    }
+
+    public void PinRubricSet(Guid rubricSetId)
+    {
+        if (rubricSetId == Guid.Empty) throw new ArgumentException("Rubric set is required.", nameof(rubricSetId));
+        RubricSetId = rubricSetId;
+    }
+
+    public void ConfigureInterview(int answerTimeSeconds, int maxFollowUps, string language, string answerMode)
+    {
+        if (Status != Statuses.Draft) throw new InvalidOperationException("Only Draft sessions can be configured.");
+        if (answerTimeSeconds is < 30 or > 600 || maxFollowUps is < 0 or > 5 || language is not ("vi-VN" or "en-US") ||
+            !AnswerModes.IsValid(answerMode))
+            throw new ArgumentException("Invalid interview settings.");
+        AnswerTimeSeconds = answerTimeSeconds;
+        MaxFollowUps = maxFollowUps;
+        Language = language;
+        AnswerMode = answerMode;
     }
 }

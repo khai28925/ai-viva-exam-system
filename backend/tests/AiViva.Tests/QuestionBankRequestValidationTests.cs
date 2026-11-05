@@ -54,6 +54,19 @@ public sealed class QuestionBankRequestValidationTests
         Assert.Null(new UpdateQuestionBankRequest("Bank", "   ").Description);
     }
 
+    [Fact]
+    public void QuestionClassificationIsValidated()
+    {
+        Assert.True(IsValid(new CreateQuestionRequest("Q?", "Understand", 3)));
+        Assert.True(IsValid(new UpdateQuestionRequest("Q?", "  ", null)));
+        Assert.False(IsValid(new CreateQuestionRequest("Q?", "Create", 3)));
+        Assert.False(IsValid(new UpdateQuestionRequest("Q?", "Apply", 6)));
+        var json = JsonSerializer.Deserialize<CreateQuestionRequest>(
+            """{"content":"Q?","bloomLevel":"Apply","difficultyLevel":2}""", JsonSerializerOptions.Web)!;
+        Assert.Equal("Apply", json.BloomLevel);
+        Assert.Equal(2, json.DifficultyLevel);
+    }
+
     private static bool IsValid(object request)
     {
         return Validator.TryValidateObject(request, new ValidationContext(request), [], validateAllProperties: true);

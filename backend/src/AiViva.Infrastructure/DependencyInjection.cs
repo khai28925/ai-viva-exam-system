@@ -24,8 +24,8 @@ public static class DependencyInjection
 
         services.AddDbContext<QuestionBankDbContext>(options => options.UseNpgsql(connectionString));
         services.AddIdentityInfrastructure();
-        services.AddQuestionPreparationInfrastructure();
-        services.AddVivaInfrastructure();
+        services.AddQuestionPreparationInfrastructure(configuration);
+        services.AddVivaInfrastructure(configuration);
         services.AddLegacyExamsInfrastructure();
         return services;
     }

@@ -1,3 +1,4 @@
+using AiViva.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -7,6 +8,7 @@ public sealed class QuestionBankDbContextFactory : IDesignTimeDbContextFactory<Q
 {
     public QuestionBankDbContext CreateDbContext(string[] args)
     {
+        LocalEnvironment.Load();
         var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__QuestionBank");
         if (string.IsNullOrWhiteSpace(connectionString))
         {

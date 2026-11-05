@@ -97,7 +97,7 @@ export default function QuestionSelectionCard({
                 change(bankQuestions.map((question) => question.id))
               }
             >
-              Chọn cả ngân hàng
+              Chọn cả bộ câu hỏi
             </button>
             <button
               type="button"
@@ -109,7 +109,7 @@ export default function QuestionSelectionCard({
             </button>
           </div>
           {bankQuestions.length === 0 ? (
-            <p className="wf-empty">Ngân hàng chưa có câu hỏi loại Bank.</p>
+            <p className="wf-empty">Bộ này chưa có câu hỏi loại Bank.</p>
           ) : (
             <ul className="wf-selection-list">
               {bankQuestions.map((question) => (

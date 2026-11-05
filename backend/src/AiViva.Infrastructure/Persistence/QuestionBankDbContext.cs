@@ -1,4 +1,5 @@
 using AiViva.Domain.Entities;
+using AiViva.Infrastructure.Modules.QuestionPreparation.Wf1;
 using AiViva.Infrastructure.Persistence.Configurations;
 using AiViva.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,14 @@ public sealed class QuestionBankDbContext(DbContextOptions<QuestionBankDbContext
     public DbSet<QuestionBank> QuestionBanks => Set<QuestionBank>();
 
     public DbSet<Question> Questions => Set<Question>();
+    public DbSet<Subject> Subjects => Set<Subject>();
+    public DbSet<StudyDocument> StudyDocuments => Set<StudyDocument>();
+    public DbSet<StudyDocumentChunk> StudyDocumentChunks => Set<StudyDocumentChunk>();
+    public DbSet<AiGenerationRun> AiGenerationRuns => Set<AiGenerationRun>();
+    public DbSet<AiQuestionCandidate> AiQuestionCandidates => Set<AiQuestionCandidate>();
+    public DbSet<RubricSet> RubricSets => Set<RubricSet>();
+    public DbSet<SubjectRubric> SubjectRubrics => Set<SubjectRubric>();
+    public DbSet<SubjectRubricCriterion> SubjectRubricCriteria => Set<SubjectRubricCriterion>();
 
     public DbSet<Role> Roles => Set<Role>();
 
@@ -38,5 +47,6 @@ public sealed class QuestionBankDbContext(DbContextOptions<QuestionBankDbContext
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(QuestionBankDbContext).Assembly);
         modelBuilder.ConfigureWorkflowModel();
+        modelBuilder.ConfigureWf1Model();
     }
 }

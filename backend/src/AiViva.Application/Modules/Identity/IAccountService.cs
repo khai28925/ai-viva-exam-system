@@ -9,4 +9,6 @@ public interface IAccountService
     Task<IReadOnlyCollection<AccountDto>> GetAllAsync(CancellationToken ct = default);
 
     Task<CreateAccountResult> CreateAsync(CreateAccountRequest request, CancellationToken ct = default);
+
+    Task<AccountDto?> UpdateProfileAsync(Guid id, UpdateAccountProfileRequest request, CancellationToken ct = default);
 }

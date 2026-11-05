@@ -53,6 +53,21 @@ public static class AdminUserEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesValidationProblem();
 
+        users.MapPut("/{userId:guid}/profile", async (
+            Guid userId,
+            UpdateAccountProfileRequest request,
+            IAccountService accounts,
+            CancellationToken ct) =>
+        {
+            var account = await accounts.UpdateProfileAsync(userId, request, ct);
+            return account is null ? Results.NotFound() : Results.Ok(account);
+        })
+        .WithName("UpdateUserProfile")
+        .WithSummary("Update a user's full name and student code used on grade sheets.")
+        .Produces<AccountDto>()
+        .ProducesValidationProblem()
+        .Produces(StatusCodes.Status404NotFound);
+
         return group;
     }
 }

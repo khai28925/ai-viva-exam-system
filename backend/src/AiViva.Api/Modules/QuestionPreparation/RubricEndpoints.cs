@@ -8,8 +8,10 @@ public static class RubricEndpoints
 {
     public static RouteGroupBuilder MapRubricEndpoints(this RouteGroupBuilder group)
     {
+        // Legacy per-bank rubric. Grading uses the subject's approved rubric set
+        // (/v1/subjects/{id}/rubric-sets); these endpoints remain for existing data only.
         var rubric = group.MapGroup("/v1/question-banks/{bankId:guid}/rubric")
-            .WithTags("Rubrics")
+            .WithTags("Rubrics (legacy, not used for grading)")
             .RequireAuthorization(AuthPolicies.QuestionBankManage);
 
         rubric.MapGet("/", async (

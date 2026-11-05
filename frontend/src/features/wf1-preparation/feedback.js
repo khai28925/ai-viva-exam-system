@@ -8,7 +8,7 @@ export function describePreparationError(error, fallback) {
   if (status === 409 && code === 'question_preparation_locked')
     return 'Câu hỏi đã thuộc phiên Open hoặc Closed nên không thể sửa ý chính.'
   if (status === 409 && code === 'rubric_preparation_locked')
-    return 'Ngân hàng đã được dùng trong phiên Open hoặc Closed nên không thể sửa rubric.'
+    return 'Bộ câu hỏi đã được dùng trong phiên Open hoặc Closed nên không thể sửa rubric.'
   if (status === 409 && code === 'session_not_ready')
     return 'Phiên chưa đủ điều kiện mở. Kiểm tra các mục còn thiếu bên dưới.'
   if (status === 409)

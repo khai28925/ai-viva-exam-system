@@ -4,14 +4,18 @@ public sealed class QuestionBank
 {
     private QuestionBank() { }
 
-    public QuestionBank(string name, string? description = null)
+    public QuestionBank(string name, string? description = null, Guid? createdBy = null)
     {
+        if (createdBy == Guid.Empty) throw new ArgumentException("Creator must not be empty.", nameof(createdBy));
         Id = Guid.NewGuid();
+        CreatedBy = createdBy;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdateDetails(name, description);
     }
 
     public Guid Id { get; private set; }
+
+    public Guid SubjectId { get; private set; }
 
     public string Name { get; private set; } = string.Empty;
 
@@ -20,6 +24,14 @@ public sealed class QuestionBank
 
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? UpdatedAt { get; private set; }
+
+    public void AssignSubject(Guid subjectId)
+    {
+        if (subjectId == Guid.Empty) throw new ArgumentException("Subject is required.", nameof(subjectId));
+        if (SubjectId != Guid.Empty && SubjectId != subjectId)
+            throw new InvalidOperationException("Question bank already belongs to a subject.");
+        SubjectId = subjectId;
+    }
 
     public void UpdateDetails(string name, string? description)
     {

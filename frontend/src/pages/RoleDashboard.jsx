@@ -12,7 +12,7 @@ const content = {
         'Phiên thi',
         'Vào phiên đang mở để xem câu hỏi. Lượt tham gia được lưu vào hệ thống.',
       ],
-      ['Kết quả', 'Báo cáo và phản hồi sau buổi thi sẽ hiển thị tại đây.'],
+      ['Kết quả', 'Xem điểm từng câu, phản hồi AI và điểm giảng viên đã chốt.'],
     ],
   },
   LECTURER: {
@@ -21,8 +21,8 @@ const content = {
     description: 'Chuẩn bị nội dung và quản lý các buổi vấn đáp của bạn.',
     cards: [
       [
-        'Ngân hàng câu hỏi',
-        'Tạo ngân hàng, quản lý câu hỏi và lưu trực tiếp vào PostgreSQL.',
+        'Bộ câu hỏi',
+        'Tạo bộ câu hỏi, quản lý câu hỏi và lưu trực tiếp vào PostgreSQL.',
       ],
       [
         'Phiên thi',
@@ -43,12 +43,17 @@ export default function RoleDashboard({ role }) {
             <h2>{title}</h2>
             <p>{description}</p>
             {role === 'LECTURER' && index === 0 && (
-              <Link
-                className="qb-button qb-button--primary"
-                to="/question-banks"
-              >
-                Mở ngân hàng câu hỏi
-              </Link>
+              <div className="wf1-actions">
+                <Link
+                  className="qb-button qb-button--primary"
+                  to="/wf1-preparation"
+                >
+                  Chuẩn bị câu hỏi bằng AI
+                </Link>
+                <Link className="qb-button" to="/question-banks">
+                  Quản lý bộ câu hỏi
+                </Link>
+              </div>
             )}
             {((role === 'LECTURER' && index === 1) ||
               (role === 'STUDENT' && index === 0)) && (
@@ -61,11 +66,17 @@ export default function RoleDashboard({ role }) {
                   : 'Quản lý phiên thi'}
               </Link>
             )}
+            {role === 'STUDENT' && index === 1 && (
+              <Link className="exam-button exam-button--primary" to="/reports">
+                Xem bảng điểm
+              </Link>
+            )}
           </section>
         ))}
       </div>
       <p className="auth-workspace__notice">
-        Phiên thi hiện ở mức cơ bản: chưa có nộp bài, chấm điểm, AI hoặc ghi âm.
+        WF1 hiện hỗ trợ tự động tạo bản nháp câu hỏi và rubric từ PDF; giảng
+        viên luôn là người duyệt nội dung trước khi sử dụng.
       </p>
     </SessionLayout>
   )

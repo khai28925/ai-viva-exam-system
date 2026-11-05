@@ -81,6 +81,20 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AnswerMode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("VoiceOrText")
+                        .HasColumnName("answer_mode");
+
+                    b.Property<int>("AnswerTimeSeconds")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(120)
+                        .HasColumnName("answer_time_seconds");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -89,9 +103,27 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
 
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasDefaultValue("vi-VN")
+                        .HasColumnName("language");
+
+                    b.Property<int>("MaxFollowUps")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(2)
+                        .HasColumnName("max_follow_ups");
+
                     b.Property<Guid>("QuestionBankId")
                         .HasColumnType("uuid")
                         .HasColumnName("question_bank_id");
+
+                    b.Property<Guid?>("RubricSetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rubric_set_id");
 
                     b.Property<Guid?>("ScheduleId")
                         .HasColumnType("uuid")
@@ -121,6 +153,8 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                     b.HasIndex("QuestionBankId")
                         .HasDatabaseName("ix_exam_sessions_question_bank_id");
 
+                    b.HasIndex("RubricSetId");
+
                     b.HasIndex("ScheduleId")
                         .HasDatabaseName("ix_exam_sessions_schedule_id");
 
@@ -139,6 +173,11 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("BloomLevel")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("bloom_level");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(2000)
@@ -148,6 +187,10 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<int?>("DifficultyLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("difficulty_level");
 
                     b.Property<Guid?>("ParentQuestionId")
                         .HasColumnType("uuid")
@@ -181,6 +224,10 @@ namespace AiViva.Infrastructure.Persistence.Migrations
 
                     b.ToTable("questions", null, t =>
                         {
+                            t.HasCheckConstraint("ck_questions_bloom", "bloom_level IS NULL OR bloom_level IN ('Remember','Understand','Apply','Analyze')");
+
+                            t.HasCheckConstraint("ck_questions_difficulty", "difficulty_level IS NULL OR difficulty_level BETWEEN 1 AND 5");
+
                             t.HasCheckConstraint("ck_questions_parent", "parent_question_id IS NULL OR parent_question_id <> id");
 
                             t.HasCheckConstraint("ck_questions_type", "question_type IN ('Bank', 'FollowUp')");
@@ -212,6 +259,10 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(120)")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subject_id");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -220,6 +271,9 @@ namespace AiViva.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CreatedBy")
                         .HasDatabaseName("ix_question_banks_created_by");
+
+                    b.HasIndex("SubjectId")
+                        .HasDatabaseName("ix_question_banks_subject_id");
 
                     b.ToTable("question_banks", (string)null);
                 });
@@ -277,6 +331,43 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("AiViva.Domain.Entities.Subject", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.ToTable("subjects", (string)null);
+                });
+
             modelBuilder.Entity("AiViva.Domain.Entities.UserAccount", b =>
                 {
                     b.Property<Guid>("Id")
@@ -318,6 +409,11 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("role_id");
 
+                    b.Property<string>("StudentCode")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("student_code");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -331,6 +427,425 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_users_role_id");
 
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.AiGenerationRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("error_message");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("model");
+
+                    b.Property<Guid>("QuestionBankId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("question_bank_id");
+
+                    b.Property<int>("RequestedQuestionCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("requested_question_count");
+
+                    b.Property<int>("RetrievedChunkCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("retrieved_chunk_count");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subject_id");
+
+                    b.Property<string>("Topic")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("topic");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("QuestionBankId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.ToTable("ai_generation_runs", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_ai_generation_runs_status", "status IN ('Running','Completed','Failed')");
+                        });
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.AiQuestionCandidate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ApprovedQuestionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approved_question_id");
+
+                    b.Property<string>("BloomLevel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("bloom_level");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("content");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("DifficultyLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("difficulty_level");
+
+                    b.Property<string>("ExpectedKeyPointsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("expected_key_points_json");
+
+                    b.Property<Guid>("GenerationRunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("generation_run_id");
+
+                    b.Property<Guid>("QuestionBankId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("question_bank_id");
+
+                    b.Property<string>("Rationale")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("rationale");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<string>("SourceRefsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValue("[]")
+                        .HasColumnName("source_refs_json");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subject_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedQuestionId");
+
+                    b.HasIndex("GenerationRunId");
+
+                    b.HasIndex("QuestionBankId", "Status");
+
+                    b.ToTable("ai_question_candidates", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_ai_question_candidates_bloom", "bloom_level IN ('Remember','Understand','Apply','Analyze')");
+
+                            t.HasCheckConstraint("ck_ai_question_candidates_difficulty", "difficulty_level BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("ck_ai_question_candidates_status", "status IN ('Pending','Approved','Rejected')");
+                        });
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.RubricSet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("source");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subject_id");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubjectId")
+                        .IsUnique()
+                        .HasFilter("status = 'Approved'");
+
+                    b.HasIndex("SubjectId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("rubric_sets", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_rubric_sets_status", "status IN ('Draft','Approved','Archived')");
+                        });
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.StudyDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("content");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EmbeddingModel")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("embedding_model");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("file_name");
+
+                    b.Property<string>("IndexError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("index_error");
+
+                    b.Property<string>("IndexStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("Pending")
+                        .HasColumnName("index_status");
+
+                    b.Property<DateTimeOffset?>("IndexedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("indexed_at");
+
+                    b.Property<string>("MimeType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("mime_type");
+
+                    b.Property<int>("PageCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("page_count");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_bytes");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subject_id");
+
+                    b.Property<Guid>("UploadedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("UploadedBy");
+
+                    b.ToTable("study_documents", (string)null);
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.StudyDocumentChunk", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ChunkIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("chunk_index");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("content");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_id");
+
+                    b.Property<byte[]>("Embedding")
+                        .HasColumnType("bytea")
+                        .HasColumnName("embedding");
+
+                    b.Property<int>("PageEnd")
+                        .HasColumnType("integer")
+                        .HasColumnName("page_end");
+
+                    b.Property<int>("PageStart")
+                        .HasColumnType("integer")
+                        .HasColumnName("page_start");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subject_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("DocumentId", "ChunkIndex")
+                        .IsUnique();
+
+                    b.ToTable("study_document_chunks", (string)null);
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.SubjectRubric", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("display_order");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("RubricSetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rubric_set_id");
+
+                    b.Property<decimal>("WeightPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("weight_percent");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RubricSetId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("subject_rubrics", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_subject_rubrics_weight", "CAST(weight_percent AS NUMERIC) > 0 AND CAST(weight_percent AS NUMERIC) <= 100");
+                        });
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.SubjectRubricCriterion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("display_order");
+
+                    b.Property<decimal>("MaxScore")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("max_score");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("SubjectRubricId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subject_rubric_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubjectRubricId");
+
+                    b.ToTable("subject_rubric_criteria", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_subject_rubric_criteria_score", "CAST(max_score AS NUMERIC) > 0");
+                        });
                 });
 
             modelBuilder.Entity("AiViva.Infrastructure.Persistence.Models.AiEvaluation", b =>
@@ -440,6 +955,10 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
+                    b.Property<string>("AssessmentContextJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("assessment_context_json");
+
                     b.Property<string>("ContentSnapshot")
                         .IsRequired()
                         .HasMaxLength(2000)
@@ -472,11 +991,24 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("parent_attempt_question_id");
 
+                    b.Property<DateTimeOffset?>("PresentedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("presented_at");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("source");
+
+                    b.Property<DateTimeOffset?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.Property<string>("SubmittedTranscript")
+                        .HasMaxLength(12000)
+                        .HasColumnType("character varying(12000)")
+                        .HasColumnName("submitted_transcript");
 
                     b.HasKey("Id");
 
@@ -790,6 +1322,20 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(10,2)")
                         .HasColumnName("final_score");
 
+                    b.Property<DateTimeOffset?>("FinalizedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finalized_at");
+
+                    b.Property<Guid?>("FinalizedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("finalized_by");
+
+                    b.Property<bool>("IsFinalized")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_finalized");
+
                     b.Property<decimal>("LecturerTotalScore")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)")
@@ -803,6 +1349,8 @@ namespace AiViva.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ExamAttemptId")
                         .IsUnique();
+
+                    b.HasIndex("FinalizedBy");
 
                     b.ToTable("reports", null, t =>
                         {
@@ -1027,6 +1575,11 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.RubricSet", null)
+                        .WithMany()
+                        .HasForeignKey("RubricSetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("AiViva.Infrastructure.Persistence.Models.ExamSchedule", null)
                         .WithMany()
                         .HasForeignKey("ScheduleId")
@@ -1054,6 +1607,20 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AiViva.Domain.Entities.Subject", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AiViva.Domain.Entities.Subject", b =>
+                {
+                    b.HasOne("AiViva.Domain.Entities.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("AiViva.Domain.Entities.UserAccount", b =>
@@ -1065,6 +1632,98 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.AiGenerationRun", b =>
+                {
+                    b.HasOne("AiViva.Domain.Entities.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AiViva.Domain.Entities.QuestionBank", null)
+                        .WithMany()
+                        .HasForeignKey("QuestionBankId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AiViva.Domain.Entities.Subject", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.AiQuestionCandidate", b =>
+                {
+                    b.HasOne("AiViva.Domain.Entities.Question", null)
+                        .WithMany()
+                        .HasForeignKey("ApprovedQuestionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.AiGenerationRun", null)
+                        .WithMany()
+                        .HasForeignKey("GenerationRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.RubricSet", b =>
+                {
+                    b.HasOne("AiViva.Domain.Entities.Subject", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.StudyDocument", b =>
+                {
+                    b.HasOne("AiViva.Domain.Entities.Subject", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AiViva.Domain.Entities.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("UploadedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.StudyDocumentChunk", b =>
+                {
+                    b.HasOne("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.StudyDocument", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AiViva.Domain.Entities.Subject", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.SubjectRubric", b =>
+                {
+                    b.HasOne("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.RubricSet", null)
+                        .WithMany()
+                        .HasForeignKey("RubricSetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.SubjectRubricCriterion", b =>
+                {
+                    b.HasOne("AiViva.Infrastructure.Modules.QuestionPreparation.Wf1.SubjectRubric", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectRubricId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AiViva.Infrastructure.Persistence.Models.AiEvaluation", b =>
@@ -1195,6 +1854,11 @@ namespace AiViva.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ExamAttemptId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("AiViva.Domain.Entities.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("FinalizedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("AiViva.Infrastructure.Persistence.Models.Rubric", b =>

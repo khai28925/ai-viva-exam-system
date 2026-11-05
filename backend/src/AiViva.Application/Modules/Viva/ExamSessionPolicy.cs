@@ -59,9 +59,9 @@ public static class ExamSessionPolicy
         if (preparation.ValidQuestionIds.Count != selectedIds.Count && !missing.Contains("selection"))
             missing.Add("selection");
 
-        if (!preparation.HasRubric) missing.Add("rubric");
-        else if (preparation.CriterionWeights.Count == 0) missing.Add("rubricCriteria");
-        else if (preparation.CriterionWeights.Sum() != 1.0000m) missing.Add("rubricWeight");
+        if (preparation.ApprovedRubricSetId is null) missing.Add("rubric");
+        else if (!preparation.EveryRubricHasCriteria) missing.Add("rubricCriteria");
+        else if (preparation.RubricWeights.Sum() != 100m) missing.Add("rubricWeight");
 
         return new ExamSessionReadiness(missing, withoutKeyPoints);
     }

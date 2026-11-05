@@ -12,6 +12,8 @@ public sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
         {
             table.HasCheckConstraint("ck_questions_type", "question_type IN ('Bank', 'FollowUp')");
             table.HasCheckConstraint("ck_questions_parent", "parent_question_id IS NULL OR parent_question_id <> id");
+            table.HasCheckConstraint("ck_questions_bloom", "bloom_level IS NULL OR bloom_level IN ('Remember','Understand','Apply','Analyze')");
+            table.HasCheckConstraint("ck_questions_difficulty", "difficulty_level IS NULL OR difficulty_level BETWEEN 1 AND 5");
         });
         builder.HasKey(question => question.Id);
         builder.HasAlternateKey(question => new { question.Id, question.QuestionBankId });
@@ -29,6 +31,8 @@ public sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
         builder.Property(question => question.ParentQuestionId).HasColumnName("parent_question_id");
         builder.Property(question => question.QuestionType).HasColumnName("question_type")
             .HasMaxLength(16).HasDefaultValue("Bank").IsRequired();
+        builder.Property(question => question.BloomLevel).HasColumnName("bloom_level").HasMaxLength(16);
+        builder.Property(question => question.DifficultyLevel).HasColumnName("difficulty_level");
         builder.Property(question => question.UpdatedAt).HasColumnName("updated_at")
             .HasColumnType("timestamp with time zone");
         builder.HasOne<Question>().WithMany()

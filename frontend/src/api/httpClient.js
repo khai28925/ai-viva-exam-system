@@ -37,12 +37,13 @@ async function getCsrfToken(signal) {
 
 export async function request(path, { method = 'GET', body, ...options } = {}) {
   const verb = method.toUpperCase()
+  const isFormData = body instanceof FormData
   const headers = {
     Accept: 'application/json',
     ...options.headers,
   }
 
-  if (body !== undefined) {
+  if (body !== undefined && !isFormData) {
     headers['Content-Type'] = 'application/json'
   }
 
@@ -55,7 +56,9 @@ export async function request(path, { method = 'GET', body, ...options } = {}) {
     method: verb,
     credentials: 'include',
     headers,
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    ...(body === undefined
+      ? {}
+      : { body: isFormData ? body : JSON.stringify(body) }),
   })
 
   return readResponse(response)

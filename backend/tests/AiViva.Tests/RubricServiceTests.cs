@@ -34,7 +34,10 @@ public sealed class RubricServiceTests : IAsyncDisposable
         var lecturer = new UserAccount("lecturer@example.com", role.Id);
         _db.Users.Add(lecturer);
 
-        var bank = new QuestionBank("SE Bank", "Software Engineering Bank");
+        var subject = new Subject("Software Engineering", null, lecturer.Id);
+        var bank = new QuestionBank("SE Bank", "Software Engineering Bank", lecturer.Id);
+        bank.AssignSubject(subject.Id);
+        _db.Subjects.Add(subject);
         _db.QuestionBanks.Add(bank);
         _db.SaveChanges();
 
@@ -312,6 +315,7 @@ public sealed class RubricServiceTests : IAsyncDisposable
 
         // Create Bank 2 with Rubric 2
         var bank2 = new QuestionBank("Bank 2");
+        bank2.AssignSubject(_db.QuestionBanks.Single(bank => bank.Id == _bankId).SubjectId);
         _db.QuestionBanks.Add(bank2);
         await _db.SaveChangesAsync();
         await _service.CreateRubricAsync(bank2.Id, new CreateRubricRequest("Rubric 2"));

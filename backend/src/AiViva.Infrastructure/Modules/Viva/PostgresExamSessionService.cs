@@ -73,7 +73,8 @@ public sealed class PostgresExamSessionService(
         else if (updateKind == ExamSessionUpdateKind.Publish)
         {
             var readiness = await CheckReadinessAsync(id, session.QuestionBankId, ct);
-            if (readiness is not null) return readiness;
+            if (readiness.Error is not null) return readiness.Error;
+            session.PinRubricSet(readiness.RubricSetId!.Value);
         }
         else if (updateKind == ExamSessionUpdateKind.Close)
         {
@@ -261,7 +262,7 @@ public sealed class PostgresExamSessionService(
             entry.State = EntityState.Detached;
     }
 
-    private async Task<ExamSessionResult<ExamSessionDto>?> CheckReadinessAsync(
+    private async Task<(ExamSessionResult<ExamSessionDto>? Error, Guid? RubricSetId)> CheckReadinessAsync(
         Guid sessionId, Guid bankId, CancellationToken ct)
     {
         var selectedIds = await db.ExamSessionQuestions.AsNoTracking()
@@ -269,9 +270,11 @@ public sealed class PostgresExamSessionService(
             .OrderBy(item => item.DisplayOrder).Select(item => item.QuestionId).ToArrayAsync(ct);
         var preparation = await questionPreparation.GetReadinessAsync(bankId, selectedIds, ct);
         var readiness = ExamSessionPolicy.CheckReadiness(selectedIds, preparation);
-        return readiness.IsReady ? null : ExamSessionResult<ExamSessionDto>.Fail(
-            ExamSessionError.Conflict, "The session is not ready to publish.", "session_not_ready",
-            readiness.Missing, readiness.QuestionIdsWithoutKeyPoints);
+        return readiness.IsReady
+            ? (null, preparation.ApprovedRubricSetId)
+            : (ExamSessionResult<ExamSessionDto>.Fail(
+                ExamSessionError.Conflict, "The session is not ready to publish.", "session_not_ready",
+                readiness.Missing, readiness.QuestionIdsWithoutKeyPoints), null);
     }
 
     private static string? Validate(SaveExamSessionRequest request)

@@ -128,7 +128,7 @@ describe('WF1 preparation UI', () => {
     expect(
       screen.getByRole('checkbox', { name: previewQuestions[0].content }),
     ).toBeDisabled()
-    await user.click(screen.getByRole('button', { name: 'Chọn cả ngân hàng' }))
+    await user.click(screen.getByRole('button', { name: 'Chọn cả bộ câu hỏi' }))
     expect(onChange).not.toHaveBeenCalled()
   })
 
@@ -141,7 +141,7 @@ describe('WF1 preparation UI', () => {
       questionType: 'Bank',
     }))
     render(<QuestionSelectionCard questions={questions} onChange={onChange} />)
-    await user.click(screen.getByRole('button', { name: 'Chọn cả ngân hàng' }))
+    await user.click(screen.getByRole('button', { name: 'Chọn cả bộ câu hỏi' }))
     expect(screen.getByRole('alert')).toHaveTextContent('tối đa 50')
     expect(onChange).not.toHaveBeenCalled()
   })

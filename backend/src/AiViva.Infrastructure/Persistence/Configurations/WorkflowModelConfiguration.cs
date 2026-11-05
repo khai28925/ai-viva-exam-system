@@ -127,6 +127,10 @@ internal static class WorkflowModelConfiguration
             b.Property(x => x.ParentAttemptQuestionId).HasColumnName("parent_attempt_question_id");
             b.Property(x => x.ContentSnapshot).HasColumnName("content_snapshot").HasMaxLength(2000).IsRequired();
             b.Property(x => x.Source).HasColumnName("source").HasMaxLength(16);
+            b.Property(x => x.PresentedAt).HasColumnName("presented_at");
+            b.Property(x => x.AssessmentContextJson).HasColumnName("assessment_context_json").HasColumnType("jsonb");
+            b.Property(x => x.SubmittedAt).HasColumnName("submitted_at");
+            b.Property(x => x.SubmittedTranscript).HasColumnName("submitted_transcript").HasMaxLength(12000);
             b.Property(x => x.DisplayOrder).HasColumnName("display_order");
             b.Property(x => x.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("now()");
             b.HasOne<ExamAttempt>().WithMany()
@@ -221,6 +225,10 @@ internal static class WorkflowModelConfiguration
             b.Property(x => x.AiTotalScore).HasColumnName("ai_total_score").HasPrecision(10, 2);
             b.Property(x => x.LecturerTotalScore).HasColumnName("lecturer_total_score").HasPrecision(10, 2);
             b.Property(x => x.FinalScore).HasColumnName("final_score").HasPrecision(10, 2);
+            b.Property(x => x.IsFinalized).HasColumnName("is_finalized").HasDefaultValue(false);
+            b.Property(x => x.FinalizedBy).HasColumnName("finalized_by");
+            b.Property(x => x.FinalizedAt).HasColumnName("finalized_at");
+            b.HasOne<UserAccount>().WithMany().HasForeignKey(x => x.FinalizedBy).OnDelete(DeleteBehavior.Restrict);
             b.Property(x => x.Feedback).HasColumnName("feedback").HasColumnType("text");
             b.Property(x => x.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("now()");
             b.Property(x => x.UpdatedAt).HasColumnName("updated_at");

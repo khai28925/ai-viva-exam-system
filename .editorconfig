@@ -17,3 +17,10 @@ csharp_new_line_before_open_brace = all
 
 [*.md]
 trim_trailing_whitespace = false
+
+[*.cmd]
+end_of_line = crlf
+
+[*.ps1]
+indent_style = space
+indent_size = 4

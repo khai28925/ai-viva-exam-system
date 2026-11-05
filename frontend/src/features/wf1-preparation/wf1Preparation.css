@@ -667,6 +667,32 @@
 .wf-rubric-summary strong {
   font-size: 13px;
 }
+.wf-subject-rubrics {
+  padding: 0;
+  margin: 16px 0 6px;
+  list-style: none;
+}
+.wf-subject-rubrics li {
+  padding: 10px 0;
+  border-bottom: 1px solid #e9eee8;
+}
+.wf-subject-rubrics strong,
+.wf-subject-rubrics small {
+  display: block;
+}
+.wf-subject-rubrics strong {
+  font-size: 12px;
+}
+.wf-subject-rubrics small {
+  margin-top: 4px;
+  color: var(--wf-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+a.wf-button {
+  display: inline-block;
+  text-decoration: none;
+}
 .wf-rubric-summary p {
   margin: 5px 0 0;
   color: var(--wf-muted);

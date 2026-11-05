@@ -145,4 +145,22 @@ public sealed class QuestionServiceTests
         var result = await service.DeleteAsync(bankId, Guid.NewGuid());
         result.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task ManualQuestions_CarryBloomLevelAndDifficulty()
+    {
+        var (_, service, bankId) = await CreateServiceWithBankAsync();
+
+        var created = await service.CreateAsync(bankId, new CreateQuestionRequest("Compare REST and gRPC.", "Analyze", 4));
+        created!.BloomLevel.Should().Be("Analyze");
+        created.DifficultyLevel.Should().Be(4);
+
+        var updated = await service.UpdateAsync(bankId, created.Id, new UpdateQuestionRequest("Define REST.", "Remember", 1));
+        updated!.BloomLevel.Should().Be("Remember");
+        updated.DifficultyLevel.Should().Be(1);
+
+        var cleared = await service.UpdateAsync(bankId, created.Id, new UpdateQuestionRequest("Define REST."));
+        cleared!.BloomLevel.Should().BeNull();
+        cleared.DifficultyLevel.Should().BeNull();
+    }
 }

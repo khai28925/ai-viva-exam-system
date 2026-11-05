@@ -9,6 +9,9 @@ import NotFoundPage from './pages/NotFoundPage.jsx'
 import RoleDashboard from './pages/RoleDashboard.jsx'
 import QuestionBankPage from './features/question-bank/QuestionBankPage.jsx'
 import ExamSessionPage from './features/exam-session/ExamSessionPage.jsx'
+import Wf1PreparationPage from './features/wf1-ai/Wf1PreparationPage.jsx'
+import InterviewPage from './features/interview/InterviewPage.jsx'
+import ReportsPage from './features/interview/ReportsPage.jsx'
 
 export default function App() {
   return (
@@ -19,10 +22,42 @@ export default function App() {
         <Route path="/about" element={<HomePage />} />
         <Route path="/forbidden" element={<ForbiddenPage />} />
         <Route
+          path="/interviews/:attemptId"
+          element={
+            <RequireRole allowed={['STUDENT']}>
+              <InterviewPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <RequireRole allowed={['ADMIN', 'LECTURER', 'STUDENT']}>
+              <ReportsPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/reports/:attemptId"
+          element={
+            <RequireRole allowed={['ADMIN', 'LECTURER', 'STUDENT']}>
+              <ReportsPage />
+            </RequireRole>
+          }
+        />
+        <Route
           path="/exam-sessions"
           element={
             <RequireRole allowed={['LECTURER', 'ADMIN', 'STUDENT']}>
               <ExamSessionPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/wf1-preparation"
+          element={
+            <RequireRole allowed={['LECTURER', 'ADMIN']}>
+              <Wf1PreparationPage />
             </RequireRole>
           }
         />

@@ -3,7 +3,9 @@ using AiViva.Api.Modules;
 using AiViva.Application;
 using AiViva.Infrastructure;
 using AiViva.Infrastructure.Accounts;
+using AiViva.Infrastructure.Configuration;
 
+LocalEnvironment.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 const string FrontendCorsPolicy = "Frontend";

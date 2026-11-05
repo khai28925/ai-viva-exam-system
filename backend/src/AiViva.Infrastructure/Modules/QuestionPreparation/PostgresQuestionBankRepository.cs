@@ -31,6 +31,12 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db, IEx
         QuestionBank questionBank,
         CancellationToken cancellationToken = default)
     {
+        if (questionBank.SubjectId == Guid.Empty)
+        {
+            var subject = new Subject(questionBank.Name, questionBank.Description, questionBank.CreatedBy);
+            questionBank.AssignSubject(subject.Id);
+            db.Subjects.Add(subject);
+        }
         db.QuestionBanks.Add(questionBank);
         await db.SaveChangesAsync(cancellationToken);
     }
@@ -74,16 +80,19 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db, IEx
             return QuestionBankDeleteResult.HasExamSessions;
         }
 
-        if (await db.Rubrics.AnyAsync(rubric => rubric.QuestionBankId == id, cancellationToken))
-        {
-            return QuestionBankDeleteResult.HasRubric;
-        }
-
         try
         {
+            // The per-bank rubric is legacy data: grading uses the subject's approved
+            // rubric set, so an obsolete bank rubric must not keep an empty bank alive.
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            var legacyRubricIds = db.Rubrics.Where(rubric => rubric.QuestionBankId == id).Select(rubric => rubric.Id);
+            await db.RubricCriteria.Where(criterion => legacyRubricIds.Contains(criterion.RubricId))
+                .ExecuteDeleteAsync(cancellationToken);
+            await db.Rubrics.Where(rubric => rubric.QuestionBankId == id).ExecuteDeleteAsync(cancellationToken);
             var deleted = await db.QuestionBanks
                 .Where(bank => bank.Id == id)
                 .ExecuteDeleteAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             return deleted == 0 ? QuestionBankDeleteResult.NotFound : QuestionBankDeleteResult.Deleted;
         }
         catch (PostgresException exception) when (exception.SqlState == PostgresErrorCodes.ForeignKeyViolation)
@@ -146,7 +155,11 @@ public sealed class PostgresQuestionBankRepository(QuestionBankDbContext db, IEx
         CancellationToken cancellationToken = default)
     {
         db.Questions.Attach(question);
-        db.Entry(question).Property(item => item.Content).IsModified = true;
+        var entry = db.Entry(question);
+        entry.Property(item => item.Content).IsModified = true;
+        entry.Property(item => item.BloomLevel).IsModified = true;
+        entry.Property(item => item.DifficultyLevel).IsModified = true;
+        entry.Property(item => item.UpdatedAt).IsModified = true;
 
         try
         {

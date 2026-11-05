@@ -1,6 +1,7 @@
 using AiViva.Application.ExamSessions;
 using AiViva.Domain.Entities;
 using AiViva.Infrastructure.Modules.QuestionPreparation;
+using AiViva.Infrastructure.Modules.QuestionPreparation.Wf1;
 using AiViva.Infrastructure.Persistence;
 using AiViva.Infrastructure.Persistence.Models;
 using FluentAssertions;
@@ -18,6 +19,7 @@ public sealed class ExamSessionWorkflowTests : IAsyncDisposable
     private readonly ExamActor _lecturer;
     private readonly ExamActor _student;
     private readonly Guid _bankId;
+    private readonly Guid _subjectId;
     private readonly Question _question;
 
     public ExamSessionWorkflowTests()
@@ -31,13 +33,17 @@ public sealed class ExamSessionWorkflowTests : IAsyncDisposable
         var studentRole = _db.Roles.Single(role => role.Code == Role.Codes.Student);
         var lecturer = new UserAccount("session-lecturer@example.com", lecturerRole.Id);
         var student = new UserAccount("session-student@example.com", studentRole.Id);
-        var bank = new QuestionBank("Session bank", null);
+        var subject = new Subject("Session subject", null, lecturer.Id);
+        var bank = new QuestionBank("Session bank", null, lecturer.Id);
+        bank.AssignSubject(subject.Id);
         _question = new Question(bank.Id, "Original question");
         _db.Users.AddRange(lecturer, student);
+        _db.Subjects.Add(subject);
         _db.QuestionBanks.Add(bank);
         _db.Questions.Add(_question);
         _db.SaveChanges();
         _bankId = bank.Id;
+        _subjectId = subject.Id;
         _lecturer = new ExamActor(lecturer.Id, Role.Codes.Lecturer);
         _student = new ExamActor(student.Id, Role.Codes.Student);
         _service = new PostgresExamSessionService(_db, new PostgresQuestionPreparationReader(_db));
@@ -91,28 +97,56 @@ public sealed class ExamSessionWorkflowTests : IAsyncDisposable
             Content = "Expected answer",
             DisplayOrder = 0
         });
-        var rubric = new Rubric { Id = Guid.NewGuid(), QuestionBankId = _bankId, Name = "Evaluation" };
-        _db.Rubrics.Add(rubric);
-        _db.RubricCriteria.Add(new RubricCriterion
+        var rubricSet = new RubricSet
         {
             Id = Guid.NewGuid(),
-            RubricId = rubric.Id,
+            SubjectId = _subjectId,
+            Version = 1,
+            Status = "Approved",
+            Source = "Manual",
+            CreatedBy = _lecturer.Id,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ApprovedAt = DateTimeOffset.UtcNow
+        };
+        var accuracy = new SubjectRubric
+        {
+            Id = Guid.NewGuid(),
+            RubricSetId = rubricSet.Id,
             Name = "Accuracy",
+            WeightPercent = 50,
+            DisplayOrder = 0
+        };
+        _db.RubricSets.Add(rubricSet);
+        _db.SubjectRubrics.Add(accuracy);
+        _db.SubjectRubricCriteria.Add(new SubjectRubricCriterion
+        {
+            Id = Guid.NewGuid(),
+            SubjectRubricId = accuracy.Id,
+            Name = "Technical accuracy",
             MaxScore = 10,
-            Weight = 0.5m
+            DisplayOrder = 0
         });
         await _db.SaveChangesAsync();
 
         var wrongWeight = await _service.UpdateAsync(session.Id, Request("Open"), _lecturer);
         wrongWeight.Missing.Should().Contain("rubricWeight");
 
-        _db.RubricCriteria.Add(new RubricCriterion
+        var clarity = new SubjectRubric
         {
             Id = Guid.NewGuid(),
-            RubricId = rubric.Id,
+            RubricSetId = rubricSet.Id,
             Name = "Clarity",
+            WeightPercent = 50,
+            DisplayOrder = 1
+        };
+        _db.SubjectRubrics.Add(clarity);
+        _db.SubjectRubricCriteria.Add(new SubjectRubricCriterion
+        {
+            Id = Guid.NewGuid(),
+            SubjectRubricId = clarity.Id,
+            Name = "Clear explanation",
             MaxScore = 10,
-            Weight = 0.5m
+            DisplayOrder = 0
         });
         await _db.SaveChangesAsync();
         var published = await _service.UpdateAsync(session.Id, Request("Open"), _lecturer);
@@ -134,24 +168,44 @@ public sealed class ExamSessionWorkflowTests : IAsyncDisposable
             Content = "Expected answer",
             DisplayOrder = 0
         });
-        var rubric = new Rubric { Id = Guid.NewGuid(), QuestionBankId = _bankId, Name = "Evaluation" };
-        _db.Rubrics.Add(rubric);
-        _db.RubricCriteria.Add(new RubricCriterion
+        var rubricSet = new RubricSet
         {
             Id = Guid.NewGuid(),
-            RubricId = rubric.Id,
-            Name = "Accuracy",
-            MaxScore = 10,
-            Weight = 0.5m
-        });
-        _db.RubricCriteria.Add(new RubricCriterion
+            SubjectId = _subjectId,
+            Version = 1,
+            Status = "Approved",
+            Source = "Manual",
+            CreatedBy = _lecturer.Id,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ApprovedAt = DateTimeOffset.UtcNow
+        };
+        var rubric = new SubjectRubric
         {
             Id = Guid.NewGuid(),
-            RubricId = rubric.Id,
-            Name = "Clarity",
-            MaxScore = 10,
-            Weight = 0.5m
-        });
+            RubricSetId = rubricSet.Id,
+            Name = "Evaluation",
+            WeightPercent = 100,
+            DisplayOrder = 0
+        };
+        _db.RubricSets.Add(rubricSet);
+        _db.SubjectRubrics.Add(rubric);
+        _db.SubjectRubricCriteria.AddRange(
+            new SubjectRubricCriterion
+            {
+                Id = Guid.NewGuid(),
+                SubjectRubricId = rubric.Id,
+                Name = "Accuracy",
+                MaxScore = 10,
+                DisplayOrder = 0
+            },
+            new SubjectRubricCriterion
+            {
+                Id = Guid.NewGuid(),
+                SubjectRubricId = rubric.Id,
+                Name = "Clarity",
+                MaxScore = 10,
+                DisplayOrder = 1
+            });
         await _db.SaveChangesAsync();
         await _service.UpdateAsync(session.Id, Request("Open"), _lecturer);
 
@@ -172,6 +226,7 @@ public sealed class ExamSessionWorkflowTests : IAsyncDisposable
         var session = await CreateDraftAsync();
         await _service.ReplaceQuestionsAsync(session.Id, new([_question.Id]), _lecturer);
         var otherBank = new QuestionBank("Other", null);
+        otherBank.AssignSubject(_subjectId);
         _db.QuestionBanks.Add(otherBank);
         await _db.SaveChangesAsync();
 

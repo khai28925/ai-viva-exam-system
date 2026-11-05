@@ -24,6 +24,8 @@ public sealed class Question
     public string QuestionType { get; private set; } = "Bank";
 
     public string Content { get; private set; } = string.Empty;
+    public string? BloomLevel { get; private set; }
+    public int? DifficultyLevel { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? UpdatedAt { get; private set; }
@@ -37,6 +39,17 @@ public sealed class Question
         }
 
         Content = normalizedContent;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void UpdateClassification(string? bloomLevel, int? difficultyLevel)
+    {
+        if (bloomLevel is not null && bloomLevel is not ("Remember" or "Understand" or "Apply" or "Analyze"))
+            throw new ArgumentException("Bloom level must be Remember, Understand, Apply, or Analyze.", nameof(bloomLevel));
+        if (difficultyLevel is < 1 or > 5)
+            throw new ArgumentException("Difficulty level must be from 1 to 5.", nameof(difficultyLevel));
+        BloomLevel = bloomLevel;
+        DifficultyLevel = difficultyLevel;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

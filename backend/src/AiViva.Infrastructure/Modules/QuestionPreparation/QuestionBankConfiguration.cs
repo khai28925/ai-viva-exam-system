@@ -25,6 +25,11 @@ public sealed class QuestionBankConfiguration : IEntityTypeConfiguration<Questio
             .HasColumnName("description")
             .HasMaxLength(500);
 
+        builder.Property(bank => bank.SubjectId).HasColumnName("subject_id").IsRequired();
+        builder.HasOne<Subject>().WithMany().HasForeignKey(bank => bank.SubjectId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(bank => bank.SubjectId).HasDatabaseName("ix_question_banks_subject_id");
+
         builder.Property(bank => bank.CreatedBy).HasColumnName("created_by");
         builder.Property(bank => bank.UpdatedAt).HasColumnName("updated_at")
             .HasColumnType("timestamp with time zone");

@@ -1,0 +1,56 @@
+sequenceDiagram
+    autonumber
+    title WF3 - Replay an attempt and view its report (planned design)
+    actor Lecturer
+    actor Student
+    participant UI as React UI
+    participant API as ASP.NET API
+    participant DB as PostgreSQL
+    participant Store as Object storage
+
+    Note over Lecturer,Store: Planned WF3. Tables exist, but replay/report endpoints and UI are not implemented in M3.
+    Lecturer->>UI: Open an exam session
+    UI->>API: Request participants for session (proposed)
+    API->>DB: Verify Lecturer owns session or actor is Admin
+    alt Not authorized
+        DB-->>API: No visible session
+        API-->>UI: Access denied with no student data
+    else Authorized
+        DB-->>API: Session and student attempt list
+        API-->>UI: Participants and attempt status
+        Lecturer->>UI: Select a student attempt
+        UI->>API: Request attempt detail (proposed)
+        API->>DB: Read questions, answers, transcripts, AI decisions and activity logs
+        DB-->>API: Ordered replay timeline
+        API-->>UI: Attempt detail
+        opt Audio answer exists
+            UI->>API: Request authorized playback (proposed)
+            API->>Store: Resolve audio object key
+            Store-->>API: Short-lived audio access
+            API-->>UI: Playback reference
+        end
+        UI-->>Lecturer: Show replay timeline and AI/follow-up decisions
+        Lecturer->>UI: View report and feedback
+        UI->>API: Request report for attempt (proposed)
+        API->>DB: Read report and lecturer evaluation
+        alt Report available
+            DB-->>API: Scores and feedback
+            API-->>UI: Report DTO
+            UI-->>Lecturer: Show report and feedback
+        else Report not ready
+            DB-->>API: No report yet
+            API-->>UI: Explicit pending / not-found state
+        end
+    end
+
+    Student->>UI: Open own completed attempt
+    UI->>API: Request own replay and report (proposed)
+    API->>DB: Verify attempt.student_id equals signed-in Student
+    alt Own attempt
+        DB-->>API: Visible attempt detail and available report
+        API-->>UI: Student-safe replay and feedback
+        UI-->>Student: Show own session and report
+    else Another student's attempt
+        DB-->>API: Access denied
+        API-->>UI: Access denied with no other student's data
+    end

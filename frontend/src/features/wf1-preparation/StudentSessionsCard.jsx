@@ -92,7 +92,7 @@ export default function StudentSessionsCard({
                 <span>{session.participantCount ?? 0} đã tham gia</span>
               </div>
               <h2>{session.title}</h2>
-              <p>Ngân hàng: {session.questionBankName}</p>
+              <p>Bộ câu hỏi: {session.questionBankName}</p>
               <button
                 type="button"
                 className="wf-button wf-button--solid"

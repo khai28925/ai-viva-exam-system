@@ -6,7 +6,7 @@ import App from '../../App.jsx'
 
 const bank = {
   id: 'bank-1',
-  name: 'Ngân hàng từ API',
+  name: 'Bộ câu hỏi từ API',
   description: 'Dữ liệu server',
   createdAt: '2026-10-01T00:00:00Z',
 }
@@ -171,29 +171,27 @@ describe('Question Bank API-connected route', () => {
     })
     await screen.findByText(question.content)
     await user.click(
-      screen.getByRole('button', { name: 'Xóa ngân hàng', exact: true }),
+      screen.getByRole('button', { name: 'Xóa bộ câu hỏi', exact: true }),
     )
-    const dialog = screen.getByRole('dialog', { name: 'Xóa ngân hàng?' })
+    const dialog = screen.getByRole('dialog', { name: 'Xóa bộ câu hỏi?' })
     await user.click(
       within(dialog).getByRole('button', {
-        name: 'Xóa ngân hàng',
+        name: 'Xóa bộ câu hỏi',
         exact: true,
       }),
     )
     expect(
-      await within(dialog).findByText(/Ngân hàng vẫn còn câu hỏi/),
+      await within(dialog).findByText(/Bộ này vẫn còn câu hỏi/),
     ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: bank.name })).toBeInTheDocument()
     conflict = false
     await user.click(
       within(dialog).getByRole('button', {
-        name: 'Xóa ngân hàng',
+        name: 'Xóa bộ câu hỏi',
         exact: true,
       }),
     )
-    expect(
-      await screen.findByText('Chưa có ngân hàng câu hỏi'),
-    ).toBeInTheDocument()
+    expect(await screen.findByText('Chưa có bộ câu hỏi')).toBeInTheDocument()
     expect(screen.queryByText(question.content)).not.toBeInTheDocument()
   })
 

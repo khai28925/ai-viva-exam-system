@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as sessionApi from '../../api/examSessionApi.js'
 import * as bankApi from '../../api/questionBankApi.js'
+import * as wf1Api from '../../api/wf1Api.js'
 import SessionPreparationPanel from './SessionPreparationPanel.jsx'
 
 vi.mock('../../api/examSessionApi.js', () => ({
@@ -12,9 +13,11 @@ vi.mock('../../api/examSessionApi.js', () => ({
 }))
 vi.mock('../../api/questionBankApi.js', () => ({
   getQuestions: vi.fn(),
-  getRubric: vi.fn(),
-  getRubricCriteria: vi.fn(),
   getExpectedKeyPoints: vi.fn(),
+}))
+vi.mock('../../api/wf1Api.js', () => ({
+  getSubjects: vi.fn(),
+  getSubjectWorkspace: vi.fn(),
 }))
 
 const session = {
@@ -41,8 +44,21 @@ describe('live session preparation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     bankApi.getQuestions.mockResolvedValue([question])
-    bankApi.getRubric.mockResolvedValue({ id: 'rubric-1' })
-    bankApi.getRubricCriteria.mockResolvedValue([{ weight: 1 }])
+    wf1Api.getSubjects.mockResolvedValue([
+      { id: 'subject-1', questionBanks: [{ id: 'bank-1' }] },
+    ])
+    wf1Api.getSubjectWorkspace.mockResolvedValue({
+      approvedRubricSet: {
+        id: 'rubric-set-1',
+        rubrics: [
+          {
+            id: 'rubric-1',
+            weightPercent: 100,
+            criteria: [{ id: 'criterion-1' }],
+          },
+        ],
+      },
+    })
     bankApi.getExpectedKeyPoints.mockResolvedValue([{ id: 'point-1' }])
     sessionApi.getExamSessionQuestions.mockResolvedValue([])
     sessionApi.replaceExamSessionQuestions.mockResolvedValue(selection)

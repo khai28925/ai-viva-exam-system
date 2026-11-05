@@ -138,7 +138,7 @@ export default function RubricCard({
           <span className="wf-kicker">04 / TIÊU CHÍ ĐÁNH GIÁ</span>
           <h2 id="wf-rubric-title">Rubric & criteria</h2>
           <p>
-            Một rubric cho mỗi ngân hàng; tổng trọng số bằng 1 khi mở phiên.
+            Một rubric cho mỗi bộ câu hỏi; tổng trọng số bằng 1 khi mở phiên.
           </p>
         </div>
         <span className="wf-count">
