@@ -32,6 +32,8 @@ public sealed class GeminiModelChain
         FallbackAfter = double.TryParse(configuration["Gemini:FallbackAfterSeconds"], NumberStyles.Float,
             CultureInfo.InvariantCulture, out var seconds) && seconds > 0
             ? TimeSpan.FromSeconds(seconds) : defaultFallbackAfter;
+        RetryDelay = TimeSpan.FromSeconds(double.TryParse(configuration["Gemini:RetryDelaySeconds"], NumberStyles.Float,
+            CultureInfo.InvariantCulture, out var delay) && delay >= 0 ? delay : 3);
     }
 
     public IReadOnlyList<string> Models { get; }
@@ -53,6 +55,29 @@ public sealed class GeminiModelChain
     public async Task<T> RunAsync<T>(Func<string, CancellationToken, Task<T>> attempt, CancellationToken ct,
         Action<string, string, Exception>? onFallback = null)
     {
+        // Free-tier overload (429/503) is usually brief, so the whole chain is retried once after a short pause.
+        for (var round = 0; ; round++)
+        {
+            try
+            {
+                return await RunChainAsync(attempt, ct, onFallback, finalRound: round == RetryRounds);
+            }
+            catch (GeminiModelFailure failure) when (round < RetryRounds && !ct.IsCancellationRequested)
+            {
+                onFallback?.Invoke(Models[^1], Models[0], failure.Error);
+                await Task.Delay(RetryDelay, ct);
+            }
+        }
+    }
+
+    private const int RetryRounds = 1;
+
+    /// <summary>Pause before the whole chain is tried again (<c>Gemini:RetryDelaySeconds</c>, default 3 s).</summary>
+    public TimeSpan RetryDelay { get; }
+
+    private async Task<T> RunChainAsync<T>(Func<string, CancellationToken, Task<T>> attempt, CancellationToken ct,
+        Action<string, string, Exception>? onFallback, bool finalRound)
+    {
         for (var index = 0; ; index++)
         {
             var model = Models[index];
@@ -70,7 +95,7 @@ public sealed class GeminiModelChain
                     exception is GeminiModelFailure failure ? failure.Error : new TimeoutException(
                         $"No response within {FallbackAfter.TotalSeconds:0} s.", exception));
             }
-            catch (GeminiModelFailure failure)
+            catch (GeminiModelFailure failure) when (finalRound)
             {
                 ExceptionDispatchInfo.Capture(failure.Error).Throw();
                 throw;

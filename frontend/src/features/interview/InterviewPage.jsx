@@ -441,7 +441,8 @@ export default function InterviewPage() {
             </div>
             {state.currentQuestion.source === 'AiFollowUp' && (
               <p className="viva-followup-note">
-                Giám khảo AI hỏi thêm để làm rõ câu trả lời trước của bạn.
+                Giám khảo AI hỏi thêm dựa trên chính câu trả lời vừa rồi của
+                bạn.
               </p>
             )}
             <h2>{state.currentQuestion.content}</h2>

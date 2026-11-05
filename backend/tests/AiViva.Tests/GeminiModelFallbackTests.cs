@@ -65,12 +65,29 @@ public sealed class GeminiModelFallbackTests
     public async Task The_last_models_error_surfaces_when_every_model_fails()
     {
         var handler = new ScriptedHandler(_ => new HttpResponseMessage(HttpStatusCode.TooManyRequests));
-        var generator = new GeminiContentGenerator(Http(handler), Config(("Gemini:FallbackModels", "backup")));
+        var generator = new GeminiContentGenerator(Http(handler),
+            Config(("Gemini:FallbackModels", "backup"), ("Gemini:RetryDelaySeconds", "0")));
 
         var action = () => generator.GenerateQuestionsAsync("Databases", null, Grounding, 1);
 
         (await action.Should().ThrowAsync<AiGenerationException>()).Which.Failure.Should().Be(AiGenerationFailure.RateLimited);
-        handler.Models.Should().Equal("primary", "backup");
+        handler.Models.Should().Equal(["primary", "backup", "primary", "backup"], "the whole chain is retried once");
+    }
+
+    [Fact]
+    public async Task A_briefly_overloaded_chain_succeeds_on_the_retry_round()
+    {
+        var calls = 0;
+        var handler = new ScriptedHandler(_ => ++calls <= 2
+            ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+            : Ok("""{"text":"Saga pattern"}"""));
+        var ai = new GeminiInterviewAi(Http(handler),
+            Config(("Gemini:FallbackModels", "backup"), ("Gemini:RetryDelaySeconds", "0")));
+
+        var text = await ai.TranscribeAsync([1, 2, 3], "audio/webm", "vi-VN");
+
+        text.Should().Be("Saga pattern");
+        handler.Models.Should().Equal("primary", "backup", "primary");
     }
 
     [Fact]

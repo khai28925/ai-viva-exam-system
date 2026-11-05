@@ -117,9 +117,12 @@ describe('viva score report', () => {
           durationSeconds: 65,
           followUps: [
             {
-              question: 'Give an example?',
+              question:
+                "You said 'supplies dependencies'. Can you give an example?",
               answer: 'Constructor injection.',
               durationSeconds: 30,
+              probedQuote: 'supplies dependencies',
+              probeType: 'example',
             },
           ],
         },
@@ -127,6 +130,10 @@ describe('viva score report', () => {
     })
     renderPage('STUDENT')
     expect(await screen.findByText('SE180001')).toBeInTheDocument()
+    expect(screen.getByText('Yêu cầu ví dụ')).toBeInTheDocument()
+    expect(
+      screen.getByText('Hỏi xoáy vào: “supplies dependencies”'),
+    ).toBeInTheDocument()
     expect(screen.getByText(/Nguyễn Văn An/)).toBeInTheDocument()
     expect(screen.getByText('8.5/10 · Giảng viên chốt')).toBeInTheDocument()
     expect(screen.getByText('6/10 · AI')).toBeInTheDocument()

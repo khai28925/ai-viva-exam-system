@@ -19,6 +19,16 @@ const bloomLabels = {
   Analyze: 'Phân tích',
 }
 
+// How a follow-up probed the student's previous answer.
+const probeLabels = {
+  clarify: 'Làm rõ ý',
+  justify: 'Hỏi lý do',
+  example: 'Yêu cầu ví dụ',
+  challenge: 'Tình huống phản biện',
+  contradiction: 'Chỉ ra mâu thuẫn',
+  deepen: 'Đào sâu',
+}
+
 function formatDuration(seconds) {
   if (seconds === null || seconds === undefined) return null
   const minutes = Math.floor(seconds / 60)
@@ -447,6 +457,18 @@ export default function ReportsPage() {
                   <b>
                     Hỏi thêm {i + 1}: {turn.question}
                   </b>
+                  {(turn.probeType || turn.probedQuote) && (
+                    <p className="viva-probe">
+                      {turn.probeType && (
+                        <span className="viva-chip viva-chip--probe">
+                          {probeLabels[turn.probeType] ?? turn.probeType}
+                        </span>
+                      )}
+                      {turn.probedQuote && (
+                        <span>Hỏi xoáy vào: “{turn.probedQuote}”</span>
+                      )}
+                    </p>
+                  )}
                   <p>{turn.answer || '(Không trả lời)'}</p>
                   {formatDuration(turn.durationSeconds) && (
                     <small className="viva-muted">

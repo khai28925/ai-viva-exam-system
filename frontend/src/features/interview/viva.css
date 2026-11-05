@@ -154,6 +154,19 @@
   background: #fff;
   color: #1c5748;
 }
+.viva-probe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: #71847b;
+  font-size: 0.9rem;
+}
+.viva-chip--probe {
+  color: #a4552f;
+  background: #fbe9df;
+}
 .viva-followup-note {
   margin: 0 0 10px;
   color: #a4552f;
