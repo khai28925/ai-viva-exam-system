@@ -123,7 +123,9 @@ public sealed class InterviewWorkflowTests : IAsyncDisposable
         provisional.AiScore.Should().Be(5);
         provisional.FinalScore.Should().BeNull();
         provisional.Questions.Should().ContainSingle();
-        provisional.Questions[0].FollowUps.Should().ContainSingle();
+        var probe = provisional.Questions[0].FollowUps.Should().ContainSingle().Subject;
+        probe.ProbedQuote.Should().Be("supplies dependencies", "the report shows which student words the follow-up questioned");
+        probe.ProbeType.Should().Be("justify");
         var final = await service.FinalizeAsync(attempt.Id, new([new(mainId, 8.25m)], "Good explanation"), lecturer);
         final.FinalScore.Should().Be(8.25m);
         final.IsFinalized.Should().BeTrue();
@@ -414,7 +416,9 @@ public sealed class InterviewWorkflowTests : IAsyncDisposable
             LastTurns = turns;
             return Task.FromResult(new InterviewAssessment(context.Rubrics.SelectMany(r => r.Criteria)
                 .Select(c => new CriterionMark(c.Id, c.MaxScore / 2, "Partially correct")).ToArray(), "Explain more precisely.",
-                ["Recognizes dependencies"], ["Practical example"], allowFollowUp ? "How does this reduce coupling?" : null));
+                ["Recognizes dependencies"], ["Practical example"],
+                allowFollowUp ? "You said 'supplies dependencies'. How does this reduce coupling?" : null,
+                allowFollowUp ? "supplies dependencies" : null, allowFollowUp ? "justify" : null));
         }
     }
 }

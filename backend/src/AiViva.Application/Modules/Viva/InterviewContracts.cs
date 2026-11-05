@@ -18,12 +18,22 @@ public sealed record InterviewTurn(string Question, string Answer);
 /// <param name="Applicable">False when the criterion is about another topic than the question; it is then left out
 /// of the score. Defaults to true so assessments stored before this flag existed keep their meaning.</param>
 public sealed record CriterionMark(Guid CriterionId, decimal Score, string Feedback, bool Applicable = true);
+/// <summary>A statement taken verbatim from the student's latest answer and how the examiner judged it.</summary>
+/// <param name="Assessment">correct, partial, vague, incorrect, unsupported or contradiction.</param>
+public sealed record AnswerClaim(string Quote, string Assessment);
+/// <param name="FollowUpTarget">The student's exact words that the follow-up question probes.</param>
+/// <param name="FollowUpType">clarify, justify, example, challenge, contradiction or deepen.</param>
+/// <param name="Claims">Claims found in the latest answer; the follow-up targets the weakest one.</param>
 public sealed record InterviewAssessment(IReadOnlyList<CriterionMark> Criteria, string Feedback,
-    IReadOnlyList<string> Strengths, IReadOnlyList<string> MissingKeyPoints, string? FollowUpQuestion);
+    IReadOnlyList<string> Strengths, IReadOnlyList<string> MissingKeyPoints, string? FollowUpQuestion,
+    string? FollowUpTarget = null, string? FollowUpType = null, IReadOnlyList<AnswerClaim>? Claims = null);
 public sealed record TranscriptDto(string Text);
 public sealed record CriterionResultDto(Guid CriterionId, string Name, string Rubric, decimal RubricWeightPercent,
     decimal Score, decimal MaxScore, string Feedback, bool Applicable = true);
-public sealed record ReportTurnDto(string Question, string Answer, int? DurationSeconds);
+/// <param name="ProbedQuote">The student's words in the previous turn that this follow-up questioned.</param>
+/// <param name="ProbeType">clarify, justify, example, challenge, contradiction or deepen.</param>
+public sealed record ReportTurnDto(string Question, string Answer, int? DurationSeconds,
+    string? ProbedQuote = null, string? ProbeType = null);
 public sealed record AnswerReportDto(Guid QuestionId, Guid? SourceQuestionId, Guid AnswerId, string Question, string Transcript,
     decimal AiScore, decimal? FinalScore, string Feedback, IReadOnlyList<CriterionResultDto> Criteria,
     IReadOnlyList<string> Strengths, IReadOnlyList<string> MissingKeyPoints,

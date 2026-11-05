@@ -330,6 +330,13 @@ public sealed class InterviewService(QuestionBankDbContext db, IInterviewAi ai,
         bloomBySessionQuestion ??= await BloomBySessionQuestionAsync(session.Id, ct);
         int? Duration(AttemptQuestion question) =>
             Seconds(question.PresentedAt, answers.SingleOrDefault(a => a.AttemptQuestionId == question.Id)?.AnsweredAt);
+        // The evaluation of a turn proposed the follow-up asked after it, including the student words it probes.
+        InterviewAssessment? AssessmentOf(AttemptQuestion question)
+        {
+            var answer = answers.SingleOrDefault(a => a.AttemptQuestionId == question.Id);
+            var analysis = answer is null ? null : evaluations.SingleOrDefault(e => e.AnswerId == answer.Id)?.Analysis;
+            return analysis is null ? null : JsonSerializer.Deserialize<InterviewAssessment>(analysis, Json);
+        }
         var result = new List<AnswerReportDto>();
         foreach (var main in questions.Where(q => q.Source == "Bank").OrderBy(q => q.DisplayOrder))
         {
@@ -352,8 +359,14 @@ public sealed class InterviewService(QuestionBankDbContext db, IInterviewAi ai,
                 answers.Single(a => a.AttemptQuestionId == main.Id).TextContent ?? "", evaluation.Score,
                 report?.IsFinalized == true ? mark?.Score : null, assessment.Feedback, breakdown,
                 assessment.Strengths, assessment.MissingKeyPoints, chain.Skip(1)
-                    .Select(q => new ReportTurnDto(q.ContentSnapshot,
-                        answers.SingleOrDefault(a => a.AttemptQuestionId == q.Id)?.TextContent ?? "", Duration(q))).ToArray(),
+                    .Select((q, index) =>
+                    {
+                        // chain[index] is the turn answered just before follow-up q was asked.
+                        var probe = AssessmentOf(chain[index]);
+                        return new ReportTurnDto(q.ContentSnapshot,
+                            answers.SingleOrDefault(a => a.AttemptQuestionId == q.Id)?.TextContent ?? "", Duration(q),
+                            probe?.FollowUpTarget, probe?.FollowUpType);
+                    }).ToArray(),
                 Duration(main),
                 main.ExamSessionQuestionId is { } sessionQuestionId ? bloomBySessionQuestion.GetValueOrDefault(sessionQuestionId) : null));
         }
