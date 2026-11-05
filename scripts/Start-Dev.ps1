@@ -226,6 +226,9 @@ else {
     try {
         dotnet tool restore | Out-Null
         if ($LASTEXITCODE -ne 0) { Stop-Script 'dotnet tool restore failed.' }
+        # dotnet ef reads project metadata before building, so packages must be restored first (fresh clones).
+        dotnet restore AiVivaExamSystem.sln | Out-Null
+        if ($LASTEXITCODE -ne 0) { Stop-Script 'dotnet restore failed (check the network or the NuGet source).' }
         dotnet ef database update --project src/AiViva.Infrastructure --startup-project src/AiViva.Infrastructure
         if ($LASTEXITCODE -ne 0) {
             Stop-Script ('Migrations failed. On "password authentication failed": a Docker volume keeps the password ' +
