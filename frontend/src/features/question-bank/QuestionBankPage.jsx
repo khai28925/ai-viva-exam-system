@@ -4,6 +4,30 @@ import * as api from '../../api/questionBankApi.js'
 import { useAuth } from '../auth/authContext.js'
 import { ROLE_HOME } from '../auth/roles.js'
 import QuestionBankWorkspace from './QuestionBankWorkspace.jsx'
+import BankPreparationPanel from './BankPreparationPanel.jsx'
+
+function PreparationLauncher({ bank, questions, onAccessError }) {
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <>
+      <button
+        className="qb-button qb-button--ghost"
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        {expanded ? 'Ẩn chuẩn bị đề' : 'Chuẩn bị đề thi'}
+      </button>
+      {expanded && (
+        <BankPreparationPanel
+          bank={bank}
+          questions={questions}
+          onAccessError={onAccessError}
+        />
+      )}
+    </>
+  )
+}
 
 export default function QuestionBankPage() {
   const { user, invalidate, logout } = useAuth()
@@ -40,7 +64,7 @@ export default function QuestionBankPage() {
         handleAccessError(error)
         setLoadError(
           error.status === 404
-            ? 'Một ngân hàng vừa bị xóa. Hãy tải lại danh sách.'
+            ? 'Một bộ câu hỏi vừa bị xóa. Hãy tải lại danh sách.'
             : 'Không thể kết nối hoặc tải đầy đủ dữ liệu từ API. Vui lòng thử lại.',
         )
       })
@@ -104,6 +128,16 @@ export default function QuestionBankPage() {
       loggingOut={loggingOut}
       logoutDisabled={pending}
       sessionError={sessionError}
+      preparation={({ bank, questions }) =>
+        bank && (
+          <PreparationLauncher
+            key={bank.id}
+            bank={bank}
+            questions={questions}
+            onAccessError={handleAccessError}
+          />
+        )
+      }
       navigation={
         <>
           <Link
@@ -167,6 +201,15 @@ export default function QuestionBankPage() {
             questions: current.questions.map((item) =>
               item.id === questionId ? question : item,
             ),
+          }),
+        )
+      }
+      onImportQuestions={(bankId, file) =>
+        mutate(
+          (signal) => api.importQuestions(bankId, file, signal),
+          (current, result) => ({
+            ...current,
+            questions: [...current.questions, ...result.questions],
           }),
         )
       }

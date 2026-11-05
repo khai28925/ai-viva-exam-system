@@ -1,0 +1,69 @@
+sequenceDiagram
+    autonumber
+    title WF2 - Conduct AI-assisted oral exam (planned design)
+    actor Student
+    participant UI as React UI
+    participant API as ASP.NET API
+    participant DB as PostgreSQL
+    participant Store as Object storage
+    participant TTS as Text-to-Speech
+    participant STT as Speech-to-Text
+    participant AI as LLM / AI evaluation
+
+    Note over Student,AI: Planned workflow, not implemented in Milestone 3. No API paths for audio or AI are finalized.
+    Student->>UI: Join an Open exam session
+    UI->>API: Join session with auth cookie and CSRF token
+    API->>DB: Validate Open status and get/create exam_attempt
+    DB-->>API: Attempt and ordered selected questions
+    API-->>UI: Current main question
+
+    loop For each main question
+        API->>TTS: Convert question text to speech
+        TTS-->>API: Question audio
+        API-->>UI: Question text and audio reference
+        UI-->>Student: Play question
+        Student->>UI: Record spoken answer
+        UI->>API: Submit answer audio (proposed)
+        API->>Store: Save audio object
+        Store-->>API: Audio object key
+        API->>DB: Save answer and activity log
+        API->>STT: Transcribe answer audio
+        STT-->>API: Transcript and confidence
+        API->>DB: Save transcript and service interaction log
+        API->>DB: Read expected key points and rubric
+        DB-->>API: Evaluation context
+        API->>AI: Analyze question, transcript, key points and rubric
+        AI-->>API: Score, analysis and next-action decision
+        API->>DB: Save AI evaluation and interaction log
+
+        alt Answer complete
+            API-->>UI: Feedback and proceed to next main question
+        else Missing key points
+            API->>AI: Generate follow-up question
+            AI-->>API: Follow-up text
+            API->>DB: Save attempt question (AiFollowUp)
+            API->>TTS: Convert follow-up to audio
+            TTS-->>API: Follow-up audio
+            API-->>UI: Follow-up question and audio reference
+            UI-->>Student: Ask follow-up and collect next answer
+            Note over Student,AI: Repeat answer, STT and AI evaluation for the follow-up.
+        else Unclear or incorrect answer
+            API->>AI: Generate probing question
+            AI-->>API: Probing text
+            API->>DB: Save attempt question and decision
+            API->>TTS: Convert probing question to audio
+            TTS-->>API: Probing audio
+            API-->>UI: Probing question and audio reference
+            UI-->>Student: Ask probing question and collect next answer
+            Note over Student,AI: Repeat answer, STT and AI evaluation for the probe.
+        end
+
+        opt STT, TTS or AI service fails
+            API->>DB: Record failed service interaction / activity
+            API-->>UI: Retry or manual recovery error without completion
+        end
+    end
+
+    API->>DB: Mark attempt Completed when no main questions remain (planned)
+    API-->>UI: Exam finished. Report may be prepared for WF3
+    UI-->>Student: Show completion state

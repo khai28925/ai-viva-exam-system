@@ -387,6 +387,61 @@
   color: #718580;
 }
 
+.auth-admin-list__identity {
+  flex: 1;
+}
+
+.auth-admin-list__edit {
+  margin-left: auto;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid #d7e2d8;
+  border-radius: 0.5rem;
+  color: #396e54;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-admin-profile {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.auth-admin-profile label {
+  color: #4d625a;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.auth-admin-profile input {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #d7e2d8;
+  border-radius: 0.5rem;
+  font: inherit;
+}
+
+.auth-admin-profile span {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.auth-admin-profile button {
+  padding: 0.45rem 0.8rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: #fff;
+  background: #396e54;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-admin-profile button[type='button'] {
+  color: #396e54;
+  background: #eef3ee;
+}
+
 .auth-denied,
 .auth-status {
   display: flex;

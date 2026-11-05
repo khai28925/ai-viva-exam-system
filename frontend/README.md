@@ -34,7 +34,11 @@ và không nằm trong luồng đăng nhập/phân quyền của SPA. Đây ch�
 thiết kế công khai, không chứa dữ liệu thật. Xem `docs/question-bank-ui-ux.md` để biết các
 trạng thái demo và luồng thao tác. Preview được giữ độc lập với trang API thật.
 
-Sao chép `.env.example` thành `.env` khi cần đổi API base URL.
+Frontend và backend dùng chung `.env` tại thư mục gốc repository. Sao chép
+`../.env.example` thành `../.env` nếu chưa có. `VITE_API_BASE_URL=/api` là tiền
+tố API của frontend; `API_PROXY_TARGET=http://localhost:5065` là URL backend
+cho proxy Vite. Khởi động lại Vite sau khi sửa cấu hình. API key chỉ điền ở
+`GEMINI_API_KEY`, không đặt trong biến có tiền tố `VITE_`.
 
 ## Công cụ và quy ước
 

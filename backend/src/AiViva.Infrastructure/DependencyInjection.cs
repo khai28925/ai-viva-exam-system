@@ -1,11 +1,8 @@
-using AiViva.Application.Abstractions;
-using AiViva.Application.Accounts;
-using AiViva.Application.ExamSessions;
-using AiViva.Domain.Entities;
-using AiViva.Infrastructure.Accounts;
+using AiViva.Infrastructure.Modules.Identity;
+using AiViva.Infrastructure.Modules.LegacyExams;
+using AiViva.Infrastructure.Modules.QuestionPreparation;
+using AiViva.Infrastructure.Modules.Viva;
 using AiViva.Infrastructure.Persistence;
-using AiViva.Infrastructure.Rubrics;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,14 +22,11 @@ public static class DependencyInjection
                 "ConnectionStrings:QuestionBank is required. Set the ConnectionStrings__QuestionBank environment variable.");
         }
 
-        services.AddScoped<IExamRepository, InMemoryExamRepository>();
         services.AddDbContext<QuestionBankDbContext>(options => options.UseNpgsql(connectionString));
-        services.AddScoped<IQuestionBankRepository, PostgresQuestionBankRepository>();
-        services.AddScoped<IExpectedKeyPoints, ExpectedKeyPointsRepository>();
-        services.AddRubricServices();
-        services.AddScoped<IAccountService, AccountService>();
-        services.AddScoped<IExamSessionService, PostgresExamSessionService>();
-        services.AddScoped<IPasswordHasher<UserAccount>, PasswordHasher<UserAccount>>();
+        services.AddIdentityInfrastructure();
+        services.AddQuestionPreparationInfrastructure(configuration);
+        services.AddVivaInfrastructure(configuration);
+        services.AddLegacyExamsInfrastructure();
         return services;
     }
 }

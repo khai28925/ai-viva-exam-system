@@ -776,6 +776,80 @@
   margin-top: 20px;
 }
 
+.qb-classification-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+
+.qb-classification-fields select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 12px;
+  border: 1px solid #dae3dc;
+  border-radius: 8px;
+  color: #24443a;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.qb-question__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -2px 0 9px;
+}
+
+.qb-tag {
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #35644c;
+  background: #e6f1e8;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.qb-tag--muted {
+  color: #7a5a44;
+  background: #f6ece4;
+}
+
+.qb-import-hint {
+  margin: 0 0 18px;
+  color: #50675a;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.qb-import-hint a {
+  color: #b5603c;
+  font-weight: 700;
+}
+
+.qb-import-errors {
+  max-height: 180px;
+  margin: 10px 0 0;
+  padding: 10px 14px 10px 30px;
+  overflow: auto;
+  border-radius: 8px;
+  color: #8e3b33;
+  background: #fbf0ee;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.qb-import-success {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  color: #2f6348;
+  background: #eaf4ec;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .qb-modal input,
 .qb-modal textarea {
   display: block;

@@ -71,6 +71,10 @@ public sealed class AttemptQuestion
     public string Source { get; set; } = "Bank";
     public int DisplayOrder { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? PresentedAt { get; set; }
+    public string? AssessmentContextJson { get; set; }
+    public DateTimeOffset? SubmittedAt { get; set; }
+    public string? SubmittedTranscript { get; set; }
 }
 
 public sealed class Answer
@@ -126,6 +130,9 @@ public sealed class Report
     public string? Feedback { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
+    public bool IsFinalized { get; set; }
+    public Guid? FinalizedBy { get; set; }
+    public DateTimeOffset? FinalizedAt { get; set; }
 }
 
 public sealed class ExamActivityLog

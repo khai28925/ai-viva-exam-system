@@ -1,0 +1,258 @@
+.viva-panel {
+  background: white;
+  border: 1px solid #dce5df;
+  border-radius: 20px;
+  margin: 24px 0;
+  padding: 28px;
+  color: #193d33;
+}
+.viva-panel h2 {
+  margin-top: 0;
+}
+.viva-panel h3 {
+  line-height: 1.6;
+}
+.viva-toolbar,
+.viva-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.viva-actions {
+  justify-content: flex-start;
+}
+.viva-button,
+.viva-panel button,
+.viva-toolbar button {
+  display: inline-block;
+  padding: 12px 18px;
+  background: #1c5748;
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  font: inherit;
+}
+.viva-panel button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.viva-consent {
+  display: block;
+  margin: 20px 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.viva-field {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0;
+  font-weight: 700;
+}
+.viva-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 180px;
+  border: 1px solid #c4d2ca;
+  border-radius: 12px;
+  padding: 16px;
+  font: inherit;
+  color: #193d33;
+  background: #f9fbf8;
+  resize: vertical;
+}
+.viva-muted {
+  color: #71847b;
+  font-size: 0.9rem;
+}
+.viva-error {
+  padding: 16px;
+  border: 1px solid #efc7b3;
+  background: #fff0e8;
+  border-radius: 12px;
+  color: #9c3d27;
+}
+.viva-danger {
+  color: #b44e2d;
+}
+.viva-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+  border: 0;
+  padding: 0;
+}
+.viva-settings label {
+  display: grid;
+  gap: 8px;
+}
+.viva-settings input,
+.viva-settings select,
+.viva-toolbar select {
+  display: block;
+  padding: 10px;
+  border: 1px solid #bcd0c3;
+  border-radius: 8px;
+  font: inherit;
+}
+.viva-bands,
+.viva-scores {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.viva-bands > div,
+.viva-scores > div {
+  padding: 18px 24px;
+  border-radius: 14px;
+  background: #eef4ed;
+  display: grid;
+  gap: 8px;
+}
+.viva-bands strong,
+.viva-scores strong {
+  font-size: 1.6rem;
+}
+.viva-table-wrap {
+  overflow-x: auto;
+}
+.viva-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.viva-table-wrap td,
+.viva-table-wrap th {
+  padding: 14px;
+  border-bottom: 1px solid #e0e8df;
+  vertical-align: top;
+}
+.viva-table-wrap small {
+  display: block;
+  margin-top: 5px;
+  color: #71847b;
+}
+.viva-answer {
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+.viva-followup {
+  border-left: 3px solid #cf764c;
+  background: #faf7f0;
+  padding: 16px;
+  margin: 14px 0;
+}
+.viva-button--ghost,
+.viva-panel .viva-button--ghost {
+  border: 1px solid #b9cdc1;
+  background: #fff;
+  color: #1c5748;
+}
+.viva-followup-note {
+  margin: 0 0 10px;
+  color: #a4552f;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.viva-export {
+  display: inline-flex;
+  gap: 8px;
+}
+.viva-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.viva-kpis > div {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #eef4ed;
+}
+.viva-kpis span {
+  color: #5b7068;
+  font-size: 0.85rem;
+}
+.viva-kpis strong {
+  font-size: 1.4rem;
+}
+.viva-dist {
+  display: grid;
+  gap: 8px;
+  max-width: 560px;
+  margin: 12px 0 24px;
+}
+.viva-dist > div {
+  display: grid;
+  grid-template-columns: 90px 1fr 36px;
+  gap: 12px;
+  align-items: center;
+}
+.viva-dist__track {
+  height: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf1ec;
+}
+.viva-dist__bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #2f7a5f;
+}
+.viva-dist strong {
+  text-align: right;
+}
+.viva-marks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.viva-marks strong {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef4ed;
+}
+.viva-marks .viva-final-mark {
+  color: #fff;
+  background: #1c5748;
+}
+.viva-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 6px;
+}
+.viva-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #35644c;
+  background: #e6f1e8;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.viva-code {
+  margin-right: 4px;
+  color: #1c5748;
+}
+.viva-student small {
+  display: block;
+  color: #71847b;
+}
+@media (max-width: 700px) {
+  .viva-panel {
+    padding: 18px;
+  }
+  .viva-settings {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

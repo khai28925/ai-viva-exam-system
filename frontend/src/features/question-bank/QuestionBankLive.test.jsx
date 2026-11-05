@@ -75,9 +75,7 @@ it.skipIf(env.AIVES_LIVE_CRUD !== '1')(
       )
     }
     function questionList() {
-      return within(
-        screen.getByRole('region', { name: 'Câu hỏi trong ngân hàng' }),
-      )
+      return within(screen.getByRole('region', { name: 'Câu hỏi trong bộ' }))
     }
     let view = mount()
     const user = userEvent.setup()
@@ -91,13 +89,16 @@ it.skipIf(env.AIVES_LIVE_CRUD !== '1')(
         env.AIVES_TEST_PASSWORD,
       )
       await user.click(screen.getByRole('button', { name: /Đăng nhập/ }))
-      await screen.findByRole('button', { name: 'Thêm ngân hàng', exact: true })
+      await screen.findByRole('button', {
+        name: 'Thêm bộ câu hỏi',
+        exact: true,
+      })
       await user.click(
-        screen.getByRole('button', { name: 'Thêm ngân hàng', exact: true }),
+        screen.getByRole('button', { name: 'Thêm bộ câu hỏi', exact: true }),
       )
-      let dialog = screen.getByRole('dialog', { name: 'Thêm ngân hàng' })
+      let dialog = screen.getByRole('dialog', { name: 'Thêm bộ câu hỏi' })
       await user.type(
-        within(dialog).getByRole('textbox', { name: /Tên ngân hàng/ }),
+        within(dialog).getByRole('textbox', { name: /Tên bộ câu hỏi/ }),
         name,
       )
       await user.type(
@@ -106,7 +107,7 @@ it.skipIf(env.AIVES_LIVE_CRUD !== '1')(
       )
       await user.click(
         within(dialog).getByRole('button', {
-          name: 'Thêm ngân hàng',
+          name: 'Thêm bộ câu hỏi',
           exact: true,
         }),
       )
@@ -155,11 +156,11 @@ it.skipIf(env.AIVES_LIVE_CRUD !== '1')(
       ).toBeInTheDocument()
 
       await user.click(
-        screen.getByRole('button', { name: 'Sửa ngân hàng', exact: true }),
+        screen.getByRole('button', { name: 'Sửa bộ câu hỏi', exact: true }),
       )
-      dialog = screen.getByRole('dialog', { name: 'Chỉnh sửa ngân hàng' })
+      dialog = screen.getByRole('dialog', { name: 'Chỉnh sửa bộ câu hỏi' })
       const bankName = within(dialog).getByRole('textbox', {
-        name: /Tên ngân hàng/,
+        name: /Tên bộ câu hỏi/,
       })
       await user.clear(bankName)
       await user.type(bankName, updatedName)
@@ -183,17 +184,17 @@ it.skipIf(env.AIVES_LIVE_CRUD !== '1')(
       ).toBeInTheDocument()
 
       await user.click(
-        screen.getByRole('button', { name: 'Xóa ngân hàng', exact: true }),
+        screen.getByRole('button', { name: 'Xóa bộ câu hỏi', exact: true }),
       )
-      dialog = screen.getByRole('dialog', { name: 'Xóa ngân hàng?' })
+      dialog = screen.getByRole('dialog', { name: 'Xóa bộ câu hỏi?' })
       await user.click(
         within(dialog).getByRole('button', {
-          name: 'Xóa ngân hàng',
+          name: 'Xóa bộ câu hỏi',
           exact: true,
         }),
       )
       expect(
-        await within(dialog).findByText(/Ngân hàng vẫn còn câu hỏi/),
+        await within(dialog).findByText(/Bộ này vẫn còn câu hỏi/),
       ).toBeInTheDocument()
       await user.click(within(dialog).getByRole('button', { name: 'Giữ lại' }))
 
@@ -207,11 +208,11 @@ it.skipIf(env.AIVES_LIVE_CRUD !== '1')(
       await waitForDialogToClose()
       expect(await screen.findByText('Chưa có câu hỏi nào')).toBeInTheDocument()
       await user.click(
-        screen.getByRole('button', { name: 'Xóa ngân hàng', exact: true }),
+        screen.getByRole('button', { name: 'Xóa bộ câu hỏi', exact: true }),
       )
       await user.click(
         within(screen.getByRole('dialog')).getByRole('button', {
-          name: 'Xóa ngân hàng',
+          name: 'Xóa bộ câu hỏi',
           exact: true,
         }),
       )
@@ -223,7 +224,7 @@ it.skipIf(env.AIVES_LIVE_CRUD !== '1')(
       await user.click(screen.getByRole('button', { name: 'Làm mới dữ liệu' }))
       await waitFor(() =>
         expect(
-          screen.queryByText('Đang tải ngân hàng câu hỏi'),
+          screen.queryByText('Đang tải bộ câu hỏi'),
         ).not.toBeInTheDocument(),
       )
       expect(

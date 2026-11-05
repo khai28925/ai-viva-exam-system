@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createUser, getUsers } from './adminApi.js'
+import { createUser, getUsers, updateUserProfile } from './adminApi.js'
 import { useAuth } from '../auth/authContext.js'
 import SessionLayout from '../auth/SessionLayout.jsx'
 
@@ -7,6 +7,68 @@ const roleLabels = {
   ADMIN: 'Quản trị viên',
   LECTURER: 'Giảng viên',
   STUDENT: 'Sinh viên',
+}
+
+// Optional profile fields are only sent when filled so the account contract stays minimal.
+function profileFields(fullName, studentCode) {
+  return {
+    ...(fullName.trim() ? { fullName: fullName.trim() } : {}),
+    ...(studentCode.trim() ? { studentCode: studentCode.trim() } : {}),
+  }
+}
+
+function ProfileEditor({ account, onSaved, onCancel, onError }) {
+  const [fullName, setFullName] = useState(account.fullName ?? '')
+  const [studentCode, setStudentCode] = useState(account.studentCode ?? '')
+  const [pending, setPending] = useState(false)
+
+  async function save(event) {
+    event.preventDefault()
+    setPending(true)
+    try {
+      onSaved(
+        await updateUserProfile(account.id, {
+          fullName: fullName.trim() || null,
+          studentCode: studentCode.trim() || null,
+        }),
+      )
+    } catch (error) {
+      onError(error)
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <form className="auth-admin-profile" onSubmit={save}>
+      <label htmlFor={`profile-name-${account.id}`}>Họ và tên</label>
+      <input
+        id={`profile-name-${account.id}`}
+        maxLength={160}
+        value={fullName}
+        onChange={(event) => setFullName(event.target.value)}
+      />
+      {account.role === 'STUDENT' && (
+        <>
+          <label htmlFor={`profile-code-${account.id}`}>MSSV</label>
+          <input
+            id={`profile-code-${account.id}`}
+            maxLength={32}
+            value={studentCode}
+            onChange={(event) => setStudentCode(event.target.value)}
+          />
+        </>
+      )}
+      <span>
+        <button type="submit" disabled={pending}>
+          {pending ? 'Đang lưu...' : 'Lưu hồ sơ'}
+        </button>
+        <button type="button" onClick={onCancel} disabled={pending}>
+          Hủy
+        </button>
+      </span>
+    </form>
+  )
 }
 
 export default function AdminPage() {
@@ -20,6 +82,9 @@ export default function AdminPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('STUDENT')
+  const [fullName, setFullName] = useState('')
+  const [studentCode, setStudentCode] = useState('')
+  const [editingId, setEditingId] = useState(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -44,11 +109,18 @@ export default function AdminPage() {
     setSuccess('')
     setPending(true)
     try {
-      const created = await createUser({ email: email.trim(), password, role })
+      const created = await createUser({
+        email: email.trim(),
+        password,
+        role,
+        ...profileFields(fullName, role === 'STUDENT' ? studentCode : ''),
+      })
       setUsers((current) => [...current, created])
       setEmail('')
       setPassword('')
       setRole('STUDENT')
+      setFullName('')
+      setStudentCode('')
       setSuccess(`Đã tạo tài khoản ${created.email}.`)
     } catch (error) {
       if (error.status === 401) invalidate()
@@ -76,7 +148,8 @@ export default function AdminPage() {
           <span>01 / TẠO TÀI KHOẢN</span>
           <h2>Thành viên mới</h2>
           <p>
-            Cấp tài khoản cho giảng viên hoặc sinh viên với vai trò phù hợp.
+            Cấp tài khoản cho giảng viên hoặc sinh viên với vai trò phù hợp. Họ
+            tên và MSSV được in trên bảng điểm xuất ra.
           </p>
           <form onSubmit={handleCreate}>
             <label htmlFor="admin-email">Email</label>
@@ -111,6 +184,28 @@ export default function AdminPage() {
               <option value="STUDENT">Sinh viên</option>
               <option value="LECTURER">Giảng viên</option>
             </select>
+            <label htmlFor="admin-full-name">Họ và tên</label>
+            <input
+              id="admin-full-name"
+              autoComplete="off"
+              maxLength={160}
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              placeholder="Nguyễn Văn An"
+            />
+            {role === 'STUDENT' && (
+              <>
+                <label htmlFor="admin-student-code">MSSV</label>
+                <input
+                  id="admin-student-code"
+                  autoComplete="off"
+                  maxLength={32}
+                  value={studentCode}
+                  onChange={(event) => setStudentCode(event.target.value)}
+                  placeholder="SE180001"
+                />
+              </>
+            )}
             {formError && (
               <p className="auth-form-error" role="alert">
                 {formError}
@@ -144,12 +239,48 @@ export default function AdminPage() {
               {users.map((account) => (
                 <li key={account.id}>
                   <span className="auth-admin-list__avatar" aria-hidden="true">
-                    {account.email.charAt(0).toUpperCase()}
+                    {(account.fullName || account.email)
+                      .charAt(0)
+                      .toUpperCase()}
                   </span>
                   <span className="auth-admin-list__identity">
-                    <strong>{account.email}</strong>
-                    <small>{roleLabels[account.role] ?? account.role}</small>
+                    <strong>{account.fullName || account.email}</strong>
+                    <small>
+                      {roleLabels[account.role] ?? account.role}
+                      {account.fullName && ` · ${account.email}`}
+                      {account.studentCode && ` · MSSV ${account.studentCode}`}
+                    </small>
+                    {editingId === account.id && (
+                      <ProfileEditor
+                        account={account}
+                        onCancel={() => setEditingId(null)}
+                        onError={(error) => {
+                          if (error.status === 401) invalidate()
+                          else
+                            setFormError('Không thể cập nhật hồ sơ tài khoản.')
+                        }}
+                        onSaved={(updated) => {
+                          setUsers((current) =>
+                            current.map((item) =>
+                              item.id === updated.id ? updated : item,
+                            ),
+                          )
+                          setEditingId(null)
+                          setSuccess(`Đã cập nhật hồ sơ ${updated.email}.`)
+                        }}
+                      />
+                    )}
                   </span>
+                  {account.role !== 'ADMIN' && editingId !== account.id && (
+                    <button
+                      type="button"
+                      className="auth-admin-list__edit"
+                      aria-label={`Sửa hồ sơ ${account.email}`}
+                      onClick={() => setEditingId(account.id)}
+                    >
+                      Sửa
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

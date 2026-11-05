@@ -1,0 +1,262 @@
+using AiViva.Api.Extensions;
+using AiViva.Application.Abstractions;
+using AiViva.Application.QuestionBanks;
+using AiViva.Application.Questions;
+
+namespace AiViva.Api.Endpoints;
+
+public static class QuestionBankEndpoints
+{
+    public static RouteGroupBuilder MapQuestionBankEndpoints(this RouteGroupBuilder group)
+    {
+        var banks = group.MapGroup("/v1/question-banks")
+            .WithTags("Question Banks")
+            .RequireAuthorization(AuthPolicies.QuestionBankManage);
+
+        // Question Bank Endpoints
+        banks.MapGet("/", async (
+            IQuestionBankService service,
+            CancellationToken ct) =>
+        {
+            var result = await service.GetAllAsync(ct);
+            return Results.Ok(result);
+        })
+        .WithName("GetQuestionBanks")
+        .WithSummary("List all question banks.")
+        .Produces<IReadOnlyCollection<QuestionBankDto>>(StatusCodes.Status200OK);
+
+        banks.MapGet("/{bankId}", async (
+            Guid bankId,
+            IQuestionBankService service,
+            CancellationToken ct) =>
+        {
+            var dto = await service.GetByIdAsync(bankId, ct);
+            return dto is not null
+                ? Results.Ok(dto)
+                : Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question bank with id '{bankId}' was not found.");
+        })
+        .WithName("GetQuestionBankById")
+        .WithSummary("Get a question bank by ID.")
+        .Produces<QuestionBankDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+        banks.MapPost("/", async (
+            CreateQuestionBankRequest request,
+            IQuestionBankService service,
+            CancellationToken ct) =>
+        {
+            var dto = await service.CreateAsync(request, ct);
+            return Results.Created($"/api/v1/question-banks/{dto.Id}", dto);
+        })
+        .WithName("CreateQuestionBank")
+        .WithSummary("Create a new question bank.")
+        .Produces<QuestionBankDto>(StatusCodes.Status201Created)
+        .ProducesValidationProblem();
+
+        banks.MapPut("/{bankId}", async (
+            Guid bankId,
+            UpdateQuestionBankRequest request,
+            IQuestionBankService service,
+            CancellationToken ct) =>
+        {
+            var dto = await service.UpdateAsync(bankId, request, ct);
+            return dto is not null
+                ? Results.Ok(dto)
+                : Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question bank with id '{bankId}' was not found.");
+        })
+        .WithName("UpdateQuestionBank")
+        .WithSummary("Update a question bank.")
+        .Produces<QuestionBankDto>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+        banks.MapDelete("/{bankId}", async (
+            Guid bankId,
+            IQuestionBankService service,
+            CancellationToken ct) =>
+        {
+            var result = await service.DeleteAsync(bankId, ct);
+            return result switch
+            {
+                QuestionBankDeleteResult.Deleted => Results.NoContent(),
+                QuestionBankDeleteResult.HasQuestions => Results.Problem(
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Conflict",
+                    detail: "Cannot delete a question bank that still contains questions."),
+                QuestionBankDeleteResult.HasExamSessions => Results.Problem(
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Conflict",
+                    detail: "Cannot delete a question bank referenced by an exam session.",
+                    extensions: new Dictionary<string, object?> { ["code"] = "bank_has_exam_sessions" }),
+                QuestionBankDeleteResult.HasRubric => Results.Problem(
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Conflict",
+                    detail: "Delete the rubric before deleting this question bank.",
+                    extensions: new Dictionary<string, object?> { ["code"] = "bank_has_rubric" }),
+                _ => Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question bank with id '{bankId}' was not found.")
+            };
+        })
+        .WithName("DeleteQuestionBank")
+        .WithSummary("Delete a question bank.")
+        .Produces(StatusCodes.Status204NoContent)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
+
+        // Question Sub-resource Endpoints
+        banks.MapGet("/{bankId}/questions", async (
+            Guid bankId,
+            IQuestionService service,
+            CancellationToken ct) =>
+        {
+            var questions = await service.GetByQuestionBankIdAsync(bankId, ct);
+            return questions is not null
+                ? Results.Ok(questions)
+                : Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question bank with id '{bankId}' was not found.");
+        })
+        .WithName("GetQuestionsByBankId")
+        .WithSummary("List all questions in a question bank.")
+        .Produces<IReadOnlyCollection<QuestionDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+        banks.MapGet("/{bankId}/questions/{questionId}", async (
+            Guid bankId,
+            Guid questionId,
+            IQuestionService service,
+            CancellationToken ct) =>
+        {
+            var question = await service.GetByIdAsync(bankId, questionId, ct);
+            return question is not null
+                ? Results.Ok(question)
+                : Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question with id '{questionId}' was not found in question bank '{bankId}'.");
+        })
+        .WithName("GetQuestionById")
+        .WithSummary("Get a question by ID within a question bank.")
+        .Produces<QuestionDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+        banks.MapPost("/{bankId}/questions", async (
+            Guid bankId,
+            CreateQuestionRequest request,
+            IQuestionService service,
+            CancellationToken ct) =>
+        {
+            var dto = await service.CreateAsync(bankId, request, ct);
+            return dto is not null
+                ? Results.Created($"/api/v1/question-banks/{bankId}/questions/{dto.Id}", dto)
+                : Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question bank with id '{bankId}' was not found.");
+        })
+        .WithName("CreateQuestion")
+        .WithSummary("Create a question within a question bank.")
+        .Produces<QuestionDto>(StatusCodes.Status201Created)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+        banks.MapPost("/{bankId}/questions/import", async (
+            Guid bankId,
+            IFormFile file,
+            IQuestionImportService service,
+            CancellationToken ct) =>
+        {
+            if (file.Length is < 1 or > 1024 * 1024 ||
+                !string.Equals(Path.GetExtension(file.FileName), ".csv", StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Invalid import file",
+                    detail: "Chỉ nhận tệp .csv (UTF-8) tối đa 1 MB.",
+                    extensions: new Dictionary<string, object?> { ["code"] = "invalid_import_file" });
+            }
+
+            using var reader = new StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8, true);
+            var result = await service.ImportAsync(bankId, await reader.ReadToEndAsync(ct), ct);
+            if (result is null)
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question bank with id '{bankId}' was not found.");
+            }
+            return result.Errors.Count == 0 ? Results.Ok(result) : Results.UnprocessableEntity(result);
+        })
+        .DisableAntiforgery()
+        .WithName("ImportQuestions")
+        .WithSummary("Import questions, Bloom levels and expected key points from CSV (all rows or none).")
+        .Produces<QuestionImportResult>(StatusCodes.Status200OK)
+        .Produces<QuestionImportResult>(StatusCodes.Status422UnprocessableEntity)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+        banks.MapPut("/{bankId}/questions/{questionId}", async (
+            Guid bankId,
+            Guid questionId,
+            UpdateQuestionRequest request,
+            IQuestionService service,
+            CancellationToken ct) =>
+        {
+            var dto = await service.UpdateAsync(bankId, questionId, request, ct);
+            return dto is not null
+                ? Results.Ok(dto)
+                : Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question with id '{questionId}' was not found in question bank '{bankId}'.");
+        })
+        .WithName("UpdateQuestion")
+        .WithSummary("Update a question within a question bank.")
+        .Produces<QuestionDto>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+        banks.MapDelete("/{bankId}/questions/{questionId}", async (
+            Guid bankId,
+            Guid questionId,
+            IQuestionService service,
+            CancellationToken ct) =>
+        {
+            bool deleted;
+            try
+            {
+                deleted = await service.DeleteAsync(bankId, questionId, ct);
+            }
+            catch (QuestionDeleteConflictException exception)
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Conflict",
+                    detail: exception.Message,
+                    extensions: new Dictionary<string, object?> { ["code"] = exception.Code });
+            }
+            return deleted
+                ? Results.NoContent()
+                : Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Not Found",
+                    detail: $"Question with id '{questionId}' was not found in question bank '{bankId}'.");
+        })
+        .WithName("DeleteQuestion")
+        .WithSummary("Delete a question within a question bank.")
+        .Produces(StatusCodes.Status204NoContent)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
+
+        return group;
+    }
+}

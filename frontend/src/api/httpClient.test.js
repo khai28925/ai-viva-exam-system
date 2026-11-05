@@ -103,4 +103,30 @@ describe('HTTP client', () => {
       }),
     )
   })
+
+  it('sends FormData without forcing a JSON content type', async () => {
+    const body = new FormData()
+    body.append(
+      'file',
+      new File(['pdf'], 'lesson.pdf', { type: 'application/pdf' }),
+    )
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: 'csrf' })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 'document-1' })))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await post('/v1/subjects/subject-1/documents', body)
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/subjects/subject-1/documents',
+      expect.objectContaining({
+        body,
+        headers: expect.not.objectContaining({
+          'Content-Type': 'application/json',
+        }),
+      }),
+    )
+  })
 })

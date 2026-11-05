@@ -8,9 +8,12 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
+    <PackageReference Include="PdfPig" Version="0.1.16" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AiViva.Application\AiViva.Application.csproj" />
     <ProjectReference Include="..\AiViva.Domain\AiViva.Domain.csproj" />
+    <ProjectReference Include="..\AiViva.ModuleContracts\AiViva.ModuleContracts.csproj" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,6 @@
 * text=auto eol=lf
+# cmd.exe misparses some batch files with LF-only line endings.
+*.cmd text eol=crlf
 
 # Keep diagram images byte-for-byte unchanged.
 *.png binary

@@ -6,7 +6,7 @@ Hệ thống thi vấn đáp có hỗ trợ AI cho Entrepreneurship Experience P
 
 - **Frontend:** React 19, Vite 8
 - **Backend:** ASP.NET Core 10 Web API
-- **Kiến trúc backend:** Modular monolith, tách Domain/Application/Infrastructure/API
+- **Kiến trúc backend:** Một API modular monolith với các module Identity, QuestionPreparation, Viva và LegacyExams; các module dùng chung các lớp Domain/Application/Infrastructure và trao đổi qua `AiViva.ModuleContracts`
 - **Database:** PostgreSQL (Question Bank và tài khoản trên nhánh tích hợp)
 - **Dịch vụ ngoài dự kiến:** Speech-to-Text, LLM, Text-to-Speech
 
@@ -19,7 +19,8 @@ Hệ thống thi vấn đáp có hỗ trợ AI cho Entrepreneurship Experience P
 │   │   ├── AiViva.Api/
 │   │   ├── AiViva.Application/
 │   │   ├── AiViva.Domain/
-│   │   └── AiViva.Infrastructure/
+│   │   ├── AiViva.Infrastructure/
+│   │   └── AiViva.ModuleContracts/
 │   └── AiVivaExamSystem.sln
 ├── frontend/
 │   ├── src/
@@ -38,12 +39,45 @@ Hệ thống thi vấn đáp có hỗ trợ AI cho Entrepreneurship Experience P
 
 ## Chạy dự án
 
+URL API và Gemini key được cấu hình trong `.env` tại thư mục gốc. Nếu chưa có,
+sao chép `.env.example` thành `.env`. Điền `GEMINI_API_KEY` và, nếu cần, chuỗi
+kết nối PostgreSQL. Frontend, backend và lệnh migration tự đọc file này; khởi
+động lại các tiến trình sau khi chỉnh sửa. Chỉ `.env.example` được đưa lên Git.
+
 Question Bank hiện dùng PostgreSQL và yêu cầu đăng nhập. Trước lần chạy đầu,
 thực hiện [hướng dẫn setup database cho thành viên](docs/database-setup.md),
 sau đó xem [bootstrap admin](backend/README.md); các lệnh
 `dotnet run` dưới đây giả định terminal đã có chuỗi kết nối đúng.
 Xem [hướng dẫn demo CRUD FE → BE → PostgreSQL](docs/issue-8-demo.md) để chuẩn bị
 dữ liệu và mở `/question-banks` bằng tài khoản `ADMIN`/`LECTURER`.
+
+### Chạy nhanh bằng một lệnh (Windows)
+
+Sau khi `.env` đã có `GEMINI_API_KEY` và dòng `ConnectionStrings__QuestionBank`
+(bỏ dấu `#` và điền mật khẩu PostgreSQL), chạy tại thư mục gốc:
+
+```powershell
+.\start-dev.cmd
+```
+
+Script [`scripts/Start-Dev.ps1`](scripts/Start-Dev.ps1) sẽ:
+
+1. Đọc `.env`. Biến môi trường đã đặt sẵn trong terminal được ưu tiên.
+2. Kiểm tra PostgreSQL. Nếu chưa chạy, script bật Docker Desktop (nếu cần), rồi
+   bật container đặt trong `AIVES_DB_CONTAINER` (nếu có trong `.env`), hoặc với
+   `localhost:5432` thì chạy `backend/compose.postgres.yml`, dùng mật khẩu lấy từ
+   chuỗi kết nối. Dòng sai cú pháp trong `.env` được báo theo số dòng, vì backend
+   sẽ không khởi động với dòng đó.
+3. Chạy `dotnet ef database update`.
+4. Mở backend và frontend trong hai cửa sổ riêng.
+5. Mở `http://localhost:5173` bằng Edge.
+
+Tùy chọn: `-SkipMigrations` (bỏ qua migration), `-NoBrowser` (không mở trình
+duyệt). Dừng app bằng cách đóng hai cửa sổ "AIVES backend" và "AIVES frontend".
+Database Docker vẫn chạy cho tới khi gọi
+`docker compose -f backend/compose.postgres.yml stop`.
+
+### Chạy thủ công
 
 Mở hai terminal tại thư mục gốc.
 

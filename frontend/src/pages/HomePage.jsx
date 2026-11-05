@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { getHealth } from '../api/healthApi.js'
 
 const modules = [
-  ['Question Bank', 'Quản lý ngân hàng câu hỏi và rubric chấm điểm.'],
+  ['Question Bank', 'Quản lý bộ câu hỏi và rubric chấm điểm.'],
   ['Viva Session', 'Điều phối phiên thi và câu hỏi probing thích ứng.'],
   ['Assessment', 'Tổng hợp transcript, điểm số và phản hồi sau kỳ thi.'],
 ]

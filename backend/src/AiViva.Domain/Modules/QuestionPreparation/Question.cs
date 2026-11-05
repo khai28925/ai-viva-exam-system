@@ -1,0 +1,55 @@
+namespace AiViva.Domain.Entities;
+
+public sealed class Question
+{
+    private Question() { }
+
+    public Question(Guid questionBankId, string content)
+    {
+        if (questionBankId == Guid.Empty)
+        {
+            throw new ArgumentException("Question bank ID must not be empty.", nameof(questionBankId));
+        }
+
+        Id = Guid.NewGuid();
+        QuestionBankId = questionBankId;
+        CreatedAt = DateTimeOffset.UtcNow;
+        UpdateContent(content);
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid QuestionBankId { get; private set; }
+    public Guid? ParentQuestionId { get; private set; }
+    public string QuestionType { get; private set; } = "Bank";
+
+    public string Content { get; private set; } = string.Empty;
+    public string? BloomLevel { get; private set; }
+    public int? DifficultyLevel { get; private set; }
+
+    public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset? UpdatedAt { get; private set; }
+
+    public void UpdateContent(string content)
+    {
+        var normalizedContent = content?.Trim();
+        if (string.IsNullOrEmpty(normalizedContent) || normalizedContent.Length > 2000)
+        {
+            throw new ArgumentException("Content must contain 1 to 2000 characters.", nameof(content));
+        }
+
+        Content = normalizedContent;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void UpdateClassification(string? bloomLevel, int? difficultyLevel)
+    {
+        if (bloomLevel is not null && bloomLevel is not ("Remember" or "Understand" or "Apply" or "Analyze"))
+            throw new ArgumentException("Bloom level must be Remember, Understand, Apply, or Analyze.", nameof(bloomLevel));
+        if (difficultyLevel is < 1 or > 5)
+            throw new ArgumentException("Difficulty level must be from 1 to 5.", nameof(difficultyLevel));
+        BloomLevel = bloomLevel;
+        DifficultyLevel = difficultyLevel;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+}
